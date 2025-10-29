@@ -7,6 +7,8 @@ public class TextPriorityPattern {
             "- \\[ \\] (.*?) \\[(.*?)\\]"
     );
 
+    private TextPriorityPattern(){}
+
     public static final int TEXT_INDEX = 1;
     public static final int PRIORITY_INDEX = 2;
 

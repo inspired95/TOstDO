@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public class ConfigurationService {
     
-    private ConfigCache configCache;
+    private final ConfigCache configCache;
 
-    private ConfigSource configSource;
+    private final ConfigSource configSource;
 
     public ConfigurationService(ConfigCache configCache, ConfigSource configSource){
         this.configCache = configCache;
@@ -18,6 +18,6 @@ public class ConfigurationService {
 
     public Optional<AppConfiguration> getAppConfiguration(){
         return configCache.getAppConfiguration()//
-                .or( () ->configSource.loadAppConfiguration());
+                .or(configSource::loadAppConfiguration);
     }
 }

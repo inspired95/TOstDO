@@ -6,6 +6,7 @@ import pl.catchex.model.ToDoItem.Priority;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class PriorityParser {
@@ -24,7 +25,7 @@ public class PriorityParser {
     public Optional<Priority> parse(String priorityStr){
         Priority p = priorityMap.get(priorityStr);
         if (p == null) {
-            logger.warning("Unknown priorityStr [ priorityStr=" + priorityStr + " ]");
+            logger.log(Level.WARNING, "Unknown priorityStr [ priorityStr={0} ]", priorityStr);
             return Optional.empty();
         }
         return Optional.of(p);

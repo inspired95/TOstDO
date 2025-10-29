@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DateParser {
@@ -20,7 +21,7 @@ public class DateParser {
         try {
             return Optional.of(LocalDate.parse(dateStr, dateFormatter));
         }catch (DateTimeParseException ex){
-            logger.warning("Date cannot be parsed [ dateStr=" + dateStr + " ]" );
+            logger.log(Level.WARNING,"Date cannot be parsed [ dateStr={0} ]", dateStr );
         }
         return Optional.empty();
     }

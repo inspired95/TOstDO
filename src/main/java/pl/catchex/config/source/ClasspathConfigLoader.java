@@ -6,6 +6,7 @@ import pl.catchex.config.AppConfiguration;
 
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ClasspathConfigLoader implements ConfigSource{
@@ -20,19 +21,16 @@ public class ClasspathConfigLoader implements ConfigSource{
 
     private <T> Optional<T> loadConfiguration(String configFileName, Class<T> configurationClass){
         Yaml yaml = new Yaml();
-        String configFileRelativePath = "/" + configFileName;
 
-        try (InputStream inputStream = Main.class.getResourceAsStream(configFileRelativePath)) {
+        try (InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(configFileName)) {
 
             if (inputStream == null) {
-                logger.warning("File not found " + configFileRelativePath);
+                logger.log(Level.WARNING,"File not found [ fileName={0} ]", configFileName);
                 return Optional.empty();
             }
-            var a = ClasspathConfigLoader.class;
-
             return Optional.of(yaml.loadAs(inputStream, configurationClass));
         } catch (Exception e) {
-            logger.warning("Cannot load configuration [ " + e.getMessage() + " ]");
+            logger.log(Level.WARNING,"Cannot load configuration [ errorMessage={0} ]", e.getMessage());
         }
         return Optional.empty();
     }

@@ -20,7 +20,7 @@ public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ConfigCache configCache = new InMemoryConfigCache();
         ConfigSource configSource = new ClasspathConfigLoader();
 
@@ -29,7 +29,7 @@ public class Main {
         appConfiguration.ifPresentOrElse( config -> {
             try {
                 List<ToDoItem> toDoItems = new ToDoReader(config).read(Paths.get(config.getConfiguration().getToDoFilePath()));
-                toDoItems.forEach(System.out::println);
+                toDoItems.forEach(item -> logger.info(String.valueOf(item)));
             }catch (IOException ex){
                 logger.warning("Cannot read TODOs");
             }

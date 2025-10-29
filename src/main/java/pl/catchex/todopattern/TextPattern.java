@@ -7,6 +7,8 @@ public class TextPattern {
             "- \\[ \\] (.*?)"
     );
 
+    private TextPattern(){}
+
     public static final int TEXT_INDEX = 1;
 
     public static boolean matches(String line){
