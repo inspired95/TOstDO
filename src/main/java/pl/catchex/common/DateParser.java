@@ -10,17 +10,15 @@ public class DateParser {
 
     private static final Logger logger = Logger.getLogger(DateParser.class.getName());
 
-
-    private final String dateFormat;
+    private final DateTimeFormatter dateFormatter;
 
     public DateParser(String dateFormat){
-        this.dateFormat = dateFormat;
+        this.dateFormatter = DateTimeFormatter.ofPattern(dateFormat);
     }
 
     public Optional<LocalDate> parse(String dateStr){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
         try {
-            return Optional.of(LocalDate.parse(dateStr, formatter));
+            return Optional.of(LocalDate.parse(dateStr, dateFormatter));
         }catch (DateTimeParseException ex){
             logger.warning("Date cannot be parsed [ dateStr=" + dateStr + " ]" );
         }

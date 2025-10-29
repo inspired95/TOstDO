@@ -1,7 +1,7 @@
 configuration:
-  todo_file_path: C:\TOstDO\TODO.md
-  todo_item:
-    date_format: dd/MM/yyyy
+  todoFilePath: C:\TOstDO\TODO.md
+  todoItem:
+    dateFormat: dd/MM/yyyy
     priority:
       symbol:
         low: +

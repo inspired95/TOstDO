@@ -1,7 +1,6 @@
 package pl.catchex.config.cache;
 
 import pl.catchex.config.AppConfiguration;
-import pl.catchex.config.reader.ConfigCache;
 
 import java.util.Optional;
 import java.util.logging.Logger;

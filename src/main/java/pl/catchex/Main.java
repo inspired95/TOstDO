@@ -1,9 +1,9 @@
 package pl.catchex;
 
 import pl.catchex.config.*;
-import pl.catchex.config.cache.ConfigurationService;
+import pl.catchex.config.ConfigurationService;
 import pl.catchex.config.cache.InMemoryConfigCache;
-import pl.catchex.config.reader.ConfigCache;
+import pl.catchex.config.cache.ConfigCache;
 import pl.catchex.config.source.ClasspathConfigLoader;
 import pl.catchex.config.source.ConfigSource;
 import pl.catchex.model.ToDoItem;

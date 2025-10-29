@@ -5,9 +5,7 @@ import pl.catchex.model.ToDoItem;
 import pl.catchex.reader.PriorityParser;
 
 import java.util.Optional;
-import static pl.catchex.model.ToDoLinePatternsUtil.isTodoPatternPriorityDueDate;
-import static pl.catchex.model.ToDoLinePatternsUtil.isTodoPatternPriority;
-import static pl.catchex.model.ToDoLinePatternsUtil.isTodoPattern;
+
 public class ToDoLineParserDispatcher {
 
     private static final String TO_DO_ITEM_LINE_PREFIX = "- [ ]";
@@ -23,21 +21,16 @@ public class ToDoLineParserDispatcher {
     }
 
     public Optional<ToDoItem> parse(String line){
-        if(isToDoLine(line)){
-            if(isTodoPatternPriorityDueDate(line)){
-                return toDoLinePriorityDueDateParser.parse(line);
-            }
-            if(isTodoPatternPriority(line)){
-                return toDoLinePriorityParser.parse(line);
-            }
-            if(isTodoPattern(line)){
-                return toDoLineBasicParser.parse(line);
-            }
+        if(isNotToDoLine(line)){
+            return Optional.empty();
         }
-        return Optional.empty();
+
+        return toDoLinePriorityDueDateParser.parse(line)
+                .or(() -> toDoLinePriorityParser.parse(line))
+                .or(() -> toDoLineBasicParser.parse(line));
     }
 
-    private boolean isToDoLine(String line){
-        return line.startsWith(TO_DO_ITEM_LINE_PREFIX);
+    private boolean isNotToDoLine(String line){
+        return !line.startsWith(TO_DO_ITEM_LINE_PREFIX);
     }
 }

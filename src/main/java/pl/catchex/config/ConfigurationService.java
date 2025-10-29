@@ -1,7 +1,6 @@
-package pl.catchex.config.cache;
+package pl.catchex.config;
 
-import pl.catchex.config.AppConfiguration;
-import pl.catchex.config.reader.ConfigCache;
+import pl.catchex.config.cache.ConfigCache;
 import pl.catchex.config.source.ConfigSource;
 
 import java.util.Optional;

@@ -8,7 +8,7 @@ public class TodoItemConfiguration {
 
     public TodoItemConfiguration() {}
 
-    public void setDate_format(String dateFormat) {
+    public void setDateFormat(String dateFormat) {
         this.dateFormat = dateFormat;
     }
 

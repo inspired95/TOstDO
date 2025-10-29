@@ -8,7 +8,7 @@ public class ReaderConfiguration {
 
     public ReaderConfiguration() {}
 
-    public void setTodo_item(TodoItemConfiguration todoItemConfiguration) {
+    public void setTodoItem(TodoItemConfiguration todoItemConfiguration) {
         this.todoItemConfiguration = todoItemConfiguration;
     }
 
@@ -16,7 +16,7 @@ public class ReaderConfiguration {
         return todoItemConfiguration;
     }
 
-    public void setTodo_file_path(String toDoFilePath){
+    public void setTodoFilePath(String toDoFilePath){
         this.toDoFilePath = toDoFilePath;
     }
 

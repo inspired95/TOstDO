@@ -1,4 +1,4 @@
-package pl.catchex.config.reader;
+package pl.catchex.config.cache;
 
 import pl.catchex.config.AppConfiguration;
 
