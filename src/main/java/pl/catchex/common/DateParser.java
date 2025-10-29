@@ -1,25 +1,28 @@
 package pl.catchex.common;
 
-import pl.catchex.config.Configuration;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class DateParser {
-    private final Configuration configuration;
 
-    public DateParser(Configuration configuration){
-        this.configuration = configuration;
+    private static final Logger logger = Logger.getLogger(DateParser.class.getName());
+
+
+    private final String dateFormat;
+
+    public DateParser(String dateFormat){
+        this.dateFormat = dateFormat;
     }
 
-    public Optional<LocalDate> parse(String date){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getDateFormat());
+    public Optional<LocalDate> parse(String dateStr){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
         try {
-            return Optional.of(LocalDate.parse(date, formatter));
+            return Optional.of(LocalDate.parse(dateStr, formatter));
         }catch (DateTimeParseException ex){
-            //TODO log
+            logger.warning("Date cannot be parsed [ dateStr=" + dateStr + " ]" );
         }
         return Optional.empty();
     }
