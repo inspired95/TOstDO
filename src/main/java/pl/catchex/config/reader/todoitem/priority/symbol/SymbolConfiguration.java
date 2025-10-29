@@ -5,8 +5,9 @@ public class SymbolConfiguration {
     private String medium;
     private String high;
 
-    // public comment required by snakeyaml
-    public SymbolConfiguration() {}
+    public SymbolConfiguration() {
+        // public comment required by snakeyaml
+    }
 
     public void setLow(String low) { this.low = low; }
     public void setMedium(String medium) { this.medium = medium; }

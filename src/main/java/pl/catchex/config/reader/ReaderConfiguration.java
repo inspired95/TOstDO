@@ -6,8 +6,9 @@ public class ReaderConfiguration {
     private TodoItemConfiguration todoItemConfiguration;
     private String toDoFilePath;
 
-    // public comment required by snakeyaml
-    public ReaderConfiguration() {}
+    public ReaderConfiguration() {
+        // public comment required by snakeyaml
+    }
 
     public void setTodoItem(TodoItemConfiguration todoItemConfiguration) {
         this.todoItemConfiguration = todoItemConfiguration;

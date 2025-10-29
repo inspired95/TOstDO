@@ -6,8 +6,9 @@ public class TodoItemConfiguration {
     private String dateFormat;
     private PriorityConfiguration priorityConfiguration;
 
-    // public comment required by snakeyaml
-    public TodoItemConfiguration() {}
+    public TodoItemConfiguration() {
+        // public comment required by snakeyaml
+    }
 
     public void setDateFormat(String dateFormat) {
         this.dateFormat = dateFormat;
