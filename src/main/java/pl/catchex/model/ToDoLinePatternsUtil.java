@@ -1,14 +1,10 @@
 package pl.catchex.model;
 
+import pl.catchex.todopattern.TextPattern;
 import pl.catchex.todopattern.TextPriorityDueDatePattern;
 import pl.catchex.todopattern.TextPriorityPattern;
 
-import java.util.regex.Pattern;
-
 public class ToDoLinePatternsUtil {
-    public static final Pattern TODO_PATTERN = Pattern.compile(
-            "- \\[ \\] (.*?)"
-    );
 
     private ToDoLinePatternsUtil(){}
 
@@ -21,10 +17,6 @@ public class ToDoLinePatternsUtil {
     }
 
     public static boolean isTodoPattern(String line){
-        return matchesPattern(line, TODO_PATTERN);
-    }
-
-    private static boolean matchesPattern(String line, Pattern todoPatternPriorityDueDate) {
-        return todoPatternPriorityDueDate.matcher(line).matches();
+        return TextPattern.matches(line);
     }
 }

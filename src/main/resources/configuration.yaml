@@ -1,0 +1,9 @@
+configuration:
+  todo_file_path: C:\TOstDO\TODO.md
+  todo_item:
+    date_format: dd/MM/yyyy
+    priority:
+      symbol:
+        low: +
+        medium: ++
+        high: +++

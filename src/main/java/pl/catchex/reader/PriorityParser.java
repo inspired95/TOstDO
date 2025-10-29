@@ -1,27 +1,32 @@
 package pl.catchex.reader;
 
-import pl.catchex.config.Configuration;
+import pl.catchex.config.reader.todoitem.priority.symbol.SymbolConfiguration;
 import pl.catchex.model.ToDoItem.Priority;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class PriorityParser {
+
+    private static final Logger logger = Logger.getLogger(PriorityParser.class.getName());
+
     private final Map<String, Priority> priorityMap = new HashMap<>();
 
-    public PriorityParser(Configuration configuration)
+    public PriorityParser(SymbolConfiguration configuration)
     {
-        priorityMap.put(configuration.getLowPriorityTextSymbol(), Priority.LOW);
-        priorityMap.put(configuration.getMediumPriorityTextSymbol(), Priority.MEDIUM);
-        priorityMap.put(configuration.getHighPriorityTextSymbol(), Priority.HIGH);
+        priorityMap.put(configuration.getLow(), Priority.LOW);
+        priorityMap.put(configuration.getMedium(), Priority.MEDIUM);
+        priorityMap.put(configuration.getHigh(), Priority.HIGH);
     }
 
-    public Optional<Priority> parse(String priority){
-        Priority p = priorityMap.get(priority);
+    public Optional<Priority> parse(String priorityStr){
+        Priority p = priorityMap.get(priorityStr);
         if (p == null) {
-            throw new IllegalArgumentException("Unknown priority: " + priority);
+            logger.warning("Unknown priorityStr [ priorityStr=" + priorityStr + " ]");
+            return Optional.empty();
         }
-        return Optional.ofNullable(p);
+        return Optional.of(p);
     }
 }

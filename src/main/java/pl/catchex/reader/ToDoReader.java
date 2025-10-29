@@ -1,6 +1,6 @@
 package pl.catchex.reader;
 
-import pl.catchex.config.Configuration;
+import pl.catchex.config.AppConfiguration;
 import pl.catchex.model.ToDoItem;
 import pl.catchex.reader.lineparser.ToDoLineParserDispatcher;
 
@@ -16,9 +16,9 @@ public class ToDoReader {
 
     private final ToDoLineParserDispatcher toDoLineParserDispatcher;
 
-    public ToDoReader(Configuration configuration){
-        PriorityParser priorityParser = new PriorityParser(configuration);
-        DateParser dateParser = new DateParser(configuration);
+    public ToDoReader(AppConfiguration configuration){
+        PriorityParser priorityParser = new PriorityParser(configuration.getConfiguration().getTodoItem().getPriority().getSymbol());
+        DateParser dateParser = new DateParser(configuration.getConfiguration().getTodoItem().getDateFormat());
         this.toDoLineParserDispatcher = new ToDoLineParserDispatcher(priorityParser, dateParser);
     }
 
