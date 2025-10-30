@@ -13,11 +13,12 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 
     public static void main(String[] args) {
@@ -31,10 +32,10 @@ public class Main {
                 List<ToDoItem> toDoItems = new ToDoReader(config).read(Paths.get(config.getConfiguration().getToDoFilePath()));
                 toDoItems.forEach(item -> logger.info(String.valueOf(item)));
             }catch (IOException ex){
-                logger.warning("Cannot read TODOs");
+                logger.warn("Cannot read TODOs");
             }
 
-        }, () -> logger.warning("Configuration not loaded. Cannot start program"));
+        }, () -> logger.warn("Configuration not loaded. Cannot start program"));
 
 
     }

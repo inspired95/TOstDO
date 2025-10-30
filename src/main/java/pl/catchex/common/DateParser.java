@@ -4,12 +4,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class DateParser {
 
-    private static final Logger logger = Logger.getLogger(DateParser.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(DateParser.class);
 
     private final DateTimeFormatter dateFormatter;
 
@@ -21,7 +20,7 @@ public class DateParser {
         try {
             return Optional.of(LocalDate.parse(dateStr, dateFormatter));
         }catch (DateTimeParseException ex){
-            logger.log(Level.WARNING,"Date cannot be parsed [ dateStr={0} ]", dateStr );
+            logger.warn("Date cannot be parsed [ dateStr={} ]", dateStr );
         }
         return Optional.empty();
     }
