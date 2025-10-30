@@ -6,12 +6,12 @@ import pl.catchex.config.AppConfiguration;
 
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ClasspathConfigLoader implements ConfigSource{
 
-    private static final Logger logger = Logger.getLogger(ClasspathConfigLoader.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ClasspathConfigLoader.class);
 
     private static final String APP_CONFIGURATION_FILE_NAME = "configuration.yaml";
 
@@ -25,12 +25,12 @@ public class ClasspathConfigLoader implements ConfigSource{
         try (InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(configFileName)) {
 
             if (inputStream == null) {
-                logger.log(Level.WARNING,"File not found [ fileName={0} ]", configFileName);
+                logger.warn("File not found [ fileName={} ]", configFileName);
                 return Optional.empty();
             }
             return Optional.of(yaml.loadAs(inputStream, configurationClass));
         } catch (Exception e) {
-            logger.log(Level.WARNING,"Cannot load configuration [ errorMessage={0} ]", e.getMessage());
+            logger.warn("Cannot load configuration [ errorMessage={} ]", e.getMessage());
         }
         return Optional.empty();
     }

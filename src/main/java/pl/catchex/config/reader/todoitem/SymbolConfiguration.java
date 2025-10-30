@@ -1,4 +1,4 @@
-package pl.catchex.config.reader.todoitem.priority.symbol;
+package pl.catchex.config.reader.todoitem;
 
 public class SymbolConfiguration {
     private String low;

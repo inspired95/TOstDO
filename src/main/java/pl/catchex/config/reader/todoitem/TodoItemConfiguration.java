@@ -1,7 +1,5 @@
 package pl.catchex.config.reader.todoitem;
 
-import pl.catchex.config.reader.todoitem.priority.PriorityConfiguration;
-
 public class TodoItemConfiguration {
     private String dateFormat;
     private PriorityConfiguration priorityConfiguration;

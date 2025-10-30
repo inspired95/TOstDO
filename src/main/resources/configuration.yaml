@@ -7,3 +7,10 @@ configuration:
         low: +
         medium: ++
         high: +++
+  reminder:
+    periodFactor:
+      critical: 0.25
+      urgent: 0.5
+    periodThreshold:
+      critical: 1
+      urgent: 3

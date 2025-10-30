@@ -1,4 +1,4 @@
-package pl.catchex.todopattern;
+package pl.catchex.reader.todopattern;
 
 import java.util.regex.Pattern;
 

@@ -1,7 +1,7 @@
 package pl.catchex.reader.lineparser;
 
 import pl.catchex.model.ToDoItem;
-import pl.catchex.todopattern.TextPattern;
+import pl.catchex.reader.todopattern.TextPattern;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

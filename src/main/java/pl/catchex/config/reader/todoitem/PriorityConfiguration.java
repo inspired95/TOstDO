@@ -1,6 +1,4 @@
-package pl.catchex.config.reader.todoitem.priority;
-
-import pl.catchex.config.reader.todoitem.priority.symbol.SymbolConfiguration;
+package pl.catchex.config.reader.todoitem;
 
 public class PriorityConfiguration {
     private SymbolConfiguration symbolConfiguration;

@@ -2,7 +2,7 @@ package pl.catchex.reader.lineparser;
 
 import pl.catchex.model.ToDoItem;
 import pl.catchex.reader.PriorityParser;
-import pl.catchex.todopattern.TextPriorityPattern;
+import pl.catchex.reader.todopattern.TextPriorityPattern;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

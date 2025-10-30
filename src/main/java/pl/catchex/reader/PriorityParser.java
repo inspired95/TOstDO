@@ -1,6 +1,6 @@
 package pl.catchex.reader;
 
-import pl.catchex.config.reader.todoitem.priority.symbol.SymbolConfiguration;
+import pl.catchex.config.reader.todoitem.SymbolConfiguration;
 import pl.catchex.model.ToDoItem.Priority;
 
 import java.util.HashMap;

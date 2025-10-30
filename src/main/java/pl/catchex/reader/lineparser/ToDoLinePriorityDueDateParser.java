@@ -3,7 +3,7 @@ package pl.catchex.reader.lineparser;
 import pl.catchex.common.DateParser;
 import pl.catchex.model.ToDoItem;
 import pl.catchex.reader.PriorityParser;
-import pl.catchex.todopattern.TextPriorityDueDatePattern;
+import pl.catchex.reader.todopattern.TextPriorityDueDatePattern;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

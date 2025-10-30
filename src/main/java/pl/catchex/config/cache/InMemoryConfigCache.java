@@ -3,11 +3,12 @@ package pl.catchex.config.cache;
 import pl.catchex.config.AppConfiguration;
 
 import java.util.Optional;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InMemoryConfigCache implements ConfigCache {
 
-    private static final Logger logger = Logger.getLogger(InMemoryConfigCache.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(InMemoryConfigCache.class);
 
     private AppConfiguration cachedAppConfiguration;
 

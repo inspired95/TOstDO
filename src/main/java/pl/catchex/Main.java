@@ -6,11 +6,14 @@ import pl.catchex.config.cache.InMemoryConfigCache;
 import pl.catchex.config.cache.ConfigCache;
 import pl.catchex.config.source.ClasspathConfigLoader;
 import pl.catchex.config.source.ConfigSource;
+import pl.catchex.frequency.ToDoFrequencyService;
+import pl.catchex.model.ToDoIntervalMinutes;
 import pl.catchex.model.ToDoItem;
 import pl.catchex.reader.ToDoReader;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -29,8 +32,15 @@ public class Main {
         Optional<AppConfiguration> appConfiguration = configurationService.getAppConfiguration();
         appConfiguration.ifPresentOrElse( config -> {
             try {
+                ToDoFrequencyService toDoFrequencyService = new ToDoFrequencyService(Clock.systemDefaultZone(), config.getConfiguration().getReminderConfiguration());
+
+
                 List<ToDoItem> toDoItems = new ToDoReader(config).read(Paths.get(config.getConfiguration().getToDoFilePath()));
-                toDoItems.forEach(item -> logger.info(String.valueOf(item)));
+                toDoItems.forEach(item -> {
+                    ToDoIntervalMinutes toDoIntervalMinutes = toDoFrequencyService.calculateToDoInterval(item);
+                    logger.info( "ToDo item {} remind in {}", String.valueOf(item), toDoIntervalMinutes);
+
+                });
             }catch (IOException ex){
                 logger.warn("Cannot read TODOs");
             }
