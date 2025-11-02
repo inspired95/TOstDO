@@ -71,5 +71,20 @@ class ToDoRepositoryTest {
         verify(l1, times(1)).onToDoRemoved(item);
         verify(l2, times(1)).onToDoRemoved(item);
     }
-}
 
+    @Test
+    void removeListenerStopsNotifications() {
+        ToDoItem item = new ToDoItem.Builder().task("t5").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
+        ToDoRepositoryListener listener = mock(ToDoRepositoryListener.class);
+        repository.addListener(listener);
+        // remove listener before any changes
+        repository.removeListener(listener);
+
+        repository.add(item);
+        // listener should not be notified
+        verify(listener, times(0)).onToDoAdded(item);
+
+        repository.remove(item);
+        verify(listener, times(0)).onToDoRemoved(item);
+    }
+}

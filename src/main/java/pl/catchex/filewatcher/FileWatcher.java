@@ -14,23 +14,30 @@ public class FileWatcher {
 
     final WatchService watchService;
 
-    private final Path dirToWatch;
-
     private final Runnable job;
     final Path fileName;
     private final NotificationCondition notificationCondition;
     private Thread workerThread;
 
+    /**
+     * Create a new FileWatcher that will monitor the provided file and
+     * invoke registered {@link FileChangeListener}s when changes are detected.
+     *
+     * @param fileToWatch           file to monitor
+     * @param notificationCondition strategy that decides whether an event should notify listeners
+     * @throws IOException              when WatchService registration fails
+     * @throws IllegalArgumentException when the provided path is not valid for watching
+     */
     public FileWatcher(Path fileToWatch, NotificationCondition notificationCondition) throws IOException, IllegalArgumentException {
         FileValidationResult validationResult = FileToWatchValidator.validate(fileToWatch);
         if (validationResult.failed()) {
             throw new IllegalArgumentException("Cannot create FileWatcher: " + validationResult.getMessage());
         }
-        this.dirToWatch = fileToWatch.getParent();
+        Path dirToWatch = fileToWatch.getParent();
         try {
             this.watchService = FileSystems.getDefault().newWatchService();
             this.fileName = fileToWatch.getFileName();
-            this.dirToWatch.register(
+            dirToWatch.register(
                     this.watchService,
                     StandardWatchEventKinds.ENTRY_MODIFY
             );
@@ -42,12 +49,19 @@ public class FileWatcher {
         this.notificationCondition = notificationCondition;
     }
 
-    public Thread start() {
+    /**
+     * Start the file-watching job in a new virtual thread.
+     */
+    public void start() {
         logger.info("Starting monitoring job in a new virtual thread...");
         this.workerThread = Thread.ofVirtual().start(this.job);
-        return this.workerThread;
     }
 
+    /**
+     * Stop watching the file and shut down the internal WatchService.
+     *
+     * @throws IOException when closing the watch service fails
+     */
     public void stop() throws IOException {
         logger.info("Stopping watcher...");
 
@@ -62,11 +76,21 @@ public class FileWatcher {
         }
     }
 
+    /**
+     * Register a listener to be notified when the watched file changes.
+     *
+     * @param listener listener to register
+     */
     public void addListener(FileChangeListener listener) {
         listeners.add(listener);
         logger.info("Added listener [ listener={} ] ", listener.getClass().getSimpleName());
     }
 
+    /**
+     * Unregister a previously registered listener.
+     *
+     * @param listener listener to unregister
+     */
     public void removeListener(FileChangeListener listener) {
         listeners.remove(listener);
         logger.info("Removed listener [ listener={} ] ", listener.getClass().getSimpleName());

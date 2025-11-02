@@ -15,6 +15,11 @@ public class PriorityParser {
 
     private final Map<String, Priority> priorityMap = new HashMap<>();
 
+    /**
+     * Create a PriorityParser using symbol configuration mapping strings to priorities.
+     *
+     * @param configuration configuration holding textual symbols for priorities
+     */
     public PriorityParser(SymbolConfiguration configuration)
     {
         priorityMap.put(configuration.getLow(), Priority.LOW);
@@ -22,6 +27,12 @@ public class PriorityParser {
         priorityMap.put(configuration.getHigh(), Priority.HIGH);
     }
 
+    /**
+     * Parse a priority string into an Optional Priority enum.
+     *
+     * @param priorityStr textual priority symbol
+     * @return Optional containing the priority if recognized, otherwise empty
+     */
     public Optional<Priority> parse(String priorityStr){
         Priority p = priorityMap.get(priorityStr);
         if (p == null) {

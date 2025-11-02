@@ -19,6 +19,12 @@ public class ToDoFrequencyService {
     private final int periodCriticalThreshold;
     private final int periodUrgentThreshold;
 
+    /**
+     * Create a ToDoFrequencyService using the provided clock and reminder configuration.
+     *
+     * @param clock         clock used to determine "now" (useful for tests)
+     * @param configuration reminder configuration containing factors and thresholds
+     */
     public ToDoFrequencyService(Clock clock, ReminderConfiguration configuration){
         this.clock = clock;
         periodCriticalFactor = configuration.getPeriodFactor().getCritical();
@@ -27,9 +33,18 @@ public class ToDoFrequencyService {
         periodUrgentThreshold = configuration.getPeriodThreshold().getUrgent();
     }
 
-    public ToDoIntervalMinutes calculateToDoInterval(ToDoItem todo){
-        BaseInterval baseInterval = ToDoPriorityToBaseIntervalConverter.convert(todo.priority());
-        return expediteIfTimeLow(todo, baseInterval);
+    /**
+     * Calculate the reminder interval for a given {@link ToDoItem}.
+     * The calculation is based on the item's priority (base interval) and
+     * may be expedited if the item's due date is approaching according to
+     * the configured thresholds and factors.
+     *
+     * @param toDoItem the {@link ToDoItem} to calculate interval for
+     * @return calculated ToDoIntervalMinutes representing minutes between reminders
+     */
+    public ToDoIntervalMinutes calculateToDoInterval(ToDoItem toDoItem){
+        BaseInterval baseInterval = ToDoPriorityToBaseIntervalConverter.convert(toDoItem.priority());
+        return expediteIfTimeLow(toDoItem, baseInterval);
     }
 
     private ToDoIntervalMinutes expediteIfTimeLow(ToDoItem todo, BaseInterval baseInterval) {

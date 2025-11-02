@@ -7,6 +7,12 @@ public class FileToWatchValidator {
 
     private FileToWatchValidator() {}
 
+    /**
+     * Validate that a Path points to an existing regular file and has a valid parent directory.
+     *
+     * @param fileToWatch path to validate
+     * @return FileValidationResult representing validation outcome
+     */
     public static FileValidationResult validate(Path fileToWatch) {
 
         if (fileToWatch == null) {

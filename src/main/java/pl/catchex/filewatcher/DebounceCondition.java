@@ -19,7 +19,7 @@ public class DebounceCondition implements NotificationCondition {
      * Creates a new debouncing condition with a custom clock (useful for tests).
      *
      * @param debouncePeriodMs The minimum time (in milliseconds) that must
-     * pass between successful notifications.
+     *                         pass between successful notifications.
      * @param clock            Clock used to obtain current time in milliseconds.
      */
     public DebounceCondition(long debouncePeriodMs, Clock clock) {
@@ -35,7 +35,7 @@ public class DebounceCondition implements NotificationCondition {
      * Backwards-compatible constructor that uses the system clock.
      *
      * @param debouncePeriodMs The minimum time (in milliseconds) that must
-     * pass between successful notifications.
+     *                         pass between successful notifications.
      */
     public DebounceCondition(long debouncePeriodMs) {
         this(debouncePeriodMs, Clock.systemUTC());

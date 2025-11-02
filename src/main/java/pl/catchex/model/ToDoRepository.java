@@ -14,14 +14,32 @@ public class ToDoRepository {
 
     private final CopyOnWriteArraySet<ToDoRepositoryListener> listeners = new CopyOnWriteArraySet<>();
 
+    /**
+     * Return a snapshot of all {@link ToDoItem} instances currently stored in the repository.
+     *
+     * @return a new Set containing all stored ToDoItem instances
+     */
     public Set<ToDoItem> getAll() {
         return new HashSet<>(concurrentSet);
     }
 
+    /**
+     * Check whether the repository contains a given {@link ToDoItem}.
+     *
+     * @param item {@link ToDoItem} to check
+     * @return true if the item is present, false otherwise
+     */
     public boolean contains(ToDoItem item){
         return concurrentSet.contains(item);
     }
 
+    /**
+     * Add a {@link ToDoItem} to the repository. If the item was added successfully
+     * registered listeners will be notified.
+     *
+     * @param item {@link ToDoItem} to add
+     * @return true if the item was added (it was not present previously)
+     */
     public boolean add(ToDoItem item){
         boolean added = concurrentSet.add(item);
         if (added) {
@@ -38,6 +56,13 @@ public class ToDoRepository {
         return added;
     }
 
+    /**
+     * Remove a {@link ToDoItem} from the repository. If the item was removed
+     * registered listeners will be notified.
+     *
+     * @param item {@link ToDoItem} to remove
+     * @return true if the item was removed (it was present before)
+     */
     public boolean remove(ToDoItem item){
         boolean removed = concurrentSet.remove(item);
         if (removed) {
@@ -53,6 +78,11 @@ public class ToDoRepository {
         return removed;
     }
 
+    /**
+     * Register a listener to be notified of repository changes.
+     *
+     * @param listener listener to register (ignored if null)
+     */
     public void addListener(ToDoRepositoryListener listener) {
         if (listener != null) {
             listeners.add(listener);
@@ -60,6 +90,11 @@ public class ToDoRepository {
         }
     }
 
+    /**
+     * Unregister a previously registered repository listener.
+     *
+     * @param listener listener to remove (ignored if null)
+     */
     public void removeListener(ToDoRepositoryListener listener) {
         if (listener != null) {
             listeners.remove(listener);
