@@ -21,11 +21,7 @@ public class FileWatcher {
     private final NotificationCondition notificationCondition;
     private Thread workerThread;
 
-    public FileWatcher(Path fileToWatch) throws IOException, IllegalArgumentException {
-        this(fileToWatch, 250);
-    }
-
-    public FileWatcher(Path fileToWatch, long debouncePeriodMs) throws IOException, IllegalArgumentException {
+    public FileWatcher(Path fileToWatch, NotificationCondition notificationCondition) throws IOException, IllegalArgumentException {
         FileValidationResult validationResult = FileToWatchValidator.validate(fileToWatch);
         if (validationResult.failed()) {
             throw new IllegalArgumentException("Cannot create FileWatcher: " + validationResult.getMessage());
@@ -43,7 +39,7 @@ public class FileWatcher {
         }
         this.job = new FileWatcherJob(this);
 
-        this.notificationCondition = new DebounceCondition(debouncePeriodMs);
+        this.notificationCondition = notificationCondition;
     }
 
     public Thread start() {

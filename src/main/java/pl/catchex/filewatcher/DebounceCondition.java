@@ -1,6 +1,7 @@
 package pl.catchex.filewatcher;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.time.Clock;
 
 /**
  * An implementation of NotificationCondition that enforces a "debounce"
@@ -12,15 +13,32 @@ public class DebounceCondition implements NotificationCondition {
 
     private final long debouncePeriodMs;
     private final AtomicLong lastNotificationTime = new AtomicLong(0);
+    private final Clock clock;
 
     /**
-     * Creates a new debouncing condition.
+     * Creates a new debouncing condition with a custom clock (useful for tests).
+     *
+     * @param debouncePeriodMs The minimum time (in milliseconds) that must
+     * pass between successful notifications.
+     * @param clock            Clock used to obtain current time in milliseconds.
+     */
+    public DebounceCondition(long debouncePeriodMs, Clock clock) {
+        this.debouncePeriodMs = debouncePeriodMs;
+        this.clock = clock;
+        // Initialize lastNotificationTime so that the first call to shouldNotify()
+        // is allowed immediately (even if clock starts at 0). Subtracting an extra
+        // 1 ms ensures now - last >= debouncePeriodMs.
+        this.lastNotificationTime.set(clock.millis() - debouncePeriodMs - 1);
+    }
+
+    /**
+     * Backwards-compatible constructor that uses the system clock.
      *
      * @param debouncePeriodMs The minimum time (in milliseconds) that must
      * pass between successful notifications.
      */
     public DebounceCondition(long debouncePeriodMs) {
-        this.debouncePeriodMs = debouncePeriodMs;
+        this(debouncePeriodMs, Clock.systemUTC());
     }
 
     /**
@@ -31,11 +49,10 @@ public class DebounceCondition implements NotificationCondition {
      */
     @Override
     public boolean shouldNotify() {
-        long now = System.currentTimeMillis();
+        long now = clock.millis();
         long last = lastNotificationTime.get();
 
-        if (now - last < this.debouncePeriodMs) {
-            // Event is too soon, suppress it.
+        if (isTooSoon(now, last)) {
             return false;
         }
 
@@ -44,5 +61,9 @@ public class DebounceCondition implements NotificationCondition {
         // If this returns false: Another thread just set the time, so we are
         //                      the "bounce" event and should be suppressed.
         return lastNotificationTime.compareAndSet(last, now);
+    }
+
+    private boolean isTooSoon(long now, long last) {
+        return now - last < this.debouncePeriodMs;
     }
 }

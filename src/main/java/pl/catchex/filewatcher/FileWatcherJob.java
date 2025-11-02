@@ -18,47 +18,64 @@ public class FileWatcherJob implements Runnable {
     public void run() {
         logger.info("Job starting...");
 
-        while (true) {
-            WatchKey key;
-            try {
-                key = watcher.watchService.take();
-            } catch (InterruptedException e) {
-                // Standard way to stop: Thread was interrupted.
-                logger.warn("Job interrupted.");
-                Thread.currentThread().interrupt(); // Restore the interrupt flag
-                break;
-            } catch (ClosedWatchServiceException e) {
-                // Standard way to stop: service.close() was called.
-                logger.warn("WatchService closed, stopping thread.");
-                break;
-            }
-
-            // Process all events for the key
-            for (WatchEvent<?> event : key.pollEvents()) {
-                WatchEvent.Kind<?> kind = event.kind();
-
-                if (kind == StandardWatchEventKinds.OVERFLOW) {
-                    continue;
-                }
-
-                if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
-                    @SuppressWarnings("unchecked")
-                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                    Path changedFile = ev.context();
-
-                    if (changedFile.equals(watcher.fileName)) {
-                        watcher.notifyListeners();
-                    }
-                }
-            }
-
-            boolean valid = key.reset();
-            if (!valid) {
-                logger.warn("[Virtual Thread] Watched directory has become inaccessible.");
-                break;
+        boolean running = true;
+        while (running) {
+            WatchKey key = takeKeyOrNull();
+            if (key == null) {
+                running = false; // interrupted or watch service closed
+            } else {
+                processKey(key);
+                running = resetKeyAndLog(key);
             }
         }
 
         logger.info("Job finished.");
+    }
+
+    private WatchKey takeKeyOrNull() {
+        try {
+            return watcher.watchService.take();
+        } catch (InterruptedException e) {
+            // Standard way to stop: Thread was interrupted.
+            logger.warn("Job interrupted.");
+            Thread.currentThread().interrupt(); // Restore the interrupt flag
+            return null;
+        } catch (ClosedWatchServiceException e) {
+            // Standard way to stop: service.close() was called.
+            logger.warn("WatchService closed, stopping thread.");
+            return null;
+        }
+    }
+
+    private void processKey(WatchKey key) {
+        for (WatchEvent<?> event : key.pollEvents()) {
+            handleEvent(event);
+        }
+    }
+
+    private void handleEvent(WatchEvent<?> event) {
+        WatchEvent.Kind<?> kind = event.kind();
+
+        if (kind == StandardWatchEventKinds.OVERFLOW) {
+            return;
+        }
+
+        if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+            @SuppressWarnings("unchecked")
+            WatchEvent<Path> ev = (WatchEvent<Path>) event;
+            Path changedFile = ev.context();
+
+            if (changedFile.equals(watcher.fileName)) {
+                watcher.notifyListeners();
+            }
+        }
+    }
+
+    private boolean resetKeyAndLog(WatchKey key) {
+        boolean valid = key.reset();
+        if (!valid) {
+            logger.warn("Watched directory has become inaccessible.");
+        }
+        return valid;
     }
 }

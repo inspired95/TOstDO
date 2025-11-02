@@ -1,7 +1,6 @@
 package pl.catchex.config.source;
 
 import org.yaml.snakeyaml.Yaml;
-import pl.catchex.Main;
 import pl.catchex.config.AppConfiguration;
 
 import java.io.InputStream;
@@ -22,7 +21,7 @@ public class ClasspathConfigLoader implements ConfigSource{
     private <T> Optional<T> loadConfiguration(String configFileName, Class<T> configurationClass){
         Yaml yaml = new Yaml();
 
-        try (InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(configFileName)) {
+        try (InputStream inputStream = ClasspathConfigLoader.class.getClassLoader().getResourceAsStream(configFileName)) {
 
             if (inputStream == null) {
                 logger.warn("File not found [ fileName={} ]", configFileName);

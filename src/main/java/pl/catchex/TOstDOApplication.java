@@ -9,6 +9,7 @@ import pl.catchex.config.cache.InMemoryConfigCache;
 import pl.catchex.config.source.ClasspathConfigLoader;
 import pl.catchex.config.source.ConfigSource;
 import pl.catchex.filewatcher.FileWatcher;
+import pl.catchex.filewatcher.DebounceCondition;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -49,7 +50,8 @@ public class TOstDOApplication {
                     }
                 }));
 
-                todoFileWatcher = new FileWatcher(Paths.get(config.getConfiguration().getToDoFilePath()));
+                // explicitly inject debounce condition
+                todoFileWatcher = new FileWatcher(Paths.get(config.getConfiguration().getToDoFilePath()), new DebounceCondition(250));
                 todoFileWatcher.start();
 
                 shutdownLatch.await();
