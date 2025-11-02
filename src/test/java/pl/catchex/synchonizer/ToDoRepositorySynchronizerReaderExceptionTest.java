@@ -8,9 +8,6 @@ import pl.catchex.reader.ToDoReader;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

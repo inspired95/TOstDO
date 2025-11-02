@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,10 +56,19 @@ class FileToWatchValidatorTest {
             FileValidationResult r = FileToWatchValidator.validate(p);
             assertEquals(FileValidationResult.NOT_A_REGULAR_FILE, r);
         } finally {
-            Files.walk(dir)
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(path -> { try { Files.deleteIfExists(path); } catch (Exception ignore) {} });
+            // Ensure the stream returned by Files.walk(...) is closed by using try-with-resources
+            try (Stream<Path> stream = Files.walk(dir)) {
+                stream.sorted(Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                Files.deleteIfExists(path);
+                            } catch (Exception ignore) {
+                                // NOOP
+                            }
+                        });
+            } catch (Exception ignore) {
+                // NOOP
+            }
         }
     }
 }
-
