@@ -1,9 +1,9 @@
 package pl.catchex.model;
 
 public enum BaseInterval {
-    HIGH_PRIORITY_BASE_INTERVAL(120),
-    MEDIUM_PRIORITY_BASE_INTERVAL(240),
-    LOW_PRIORITY_BASE_INTERVAL(360);
+    HIGH_PRIORITY_BASE_INTERVAL(10),
+    MEDIUM_PRIORITY_BASE_INTERVAL(15),
+    LOW_PRIORITY_BASE_INTERVAL(20);
 
     private final ToDoIntervalMinutes interval;
 
