@@ -13,26 +13,30 @@ class DebounceConditionTest {
 
     @Test
     void firstCallAllowedSubsequentSuppressedUntilTimeout() {
+        // given
         MutableClock clock = new MutableClock(Instant.ofEpochMilli(0), ZoneId.of("UTC"));
         DebounceCondition cond = new DebounceCondition(100, clock);
 
-        // first call should be allowed
+        // when / then
         assertTrue(cond.shouldNotify());
 
-        // immediate second call should be suppressed
+        // when / then
         assertFalse(cond.shouldNotify());
 
-        // advance time longer than debounce period, it should allow again
+        // when
         clock.addMillis(150);
+
+        // then
         assertTrue(cond.shouldNotify());
     }
 
     @Test
     void concurrentCallsOnlyOneAllowed() throws InterruptedException {
+        // given
         MutableClock clock = new MutableClock(Instant.ofEpochMilli(0), ZoneId.of("UTC"));
         DebounceCondition cond = new DebounceCondition(1000, clock);
 
-        // simulate two threads calling at the same time; only one should succeed
+        // when: simulate two threads calling
         final boolean[] results = new boolean[2];
 
         Thread t1 = new Thread(() -> results[0] = cond.shouldNotify());
@@ -43,6 +47,7 @@ class DebounceConditionTest {
         t1.join();
         t2.join();
 
+        // then
         int successCount = 0;
         if (results[0]) successCount++;
         if (results[1]) successCount++;

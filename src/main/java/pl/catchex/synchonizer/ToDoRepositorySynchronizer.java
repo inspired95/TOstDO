@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -45,33 +46,36 @@ public class ToDoRepositorySynchronizer implements FileChangeListener {
 
     @Override
     public void onFileModified(Path filePath) {
-        Set<ToDoItem> readToDos = readToDos();
-        if (readToDos.isEmpty()) {
-            logger.info("No ToDo items read from file, skipping synchronization");
+        Optional<Set<ToDoItem>> readToDosOpt = readToDos();
+        if (readToDosOpt.isEmpty()) {
+            logger.info("Reading ToDo items failed, skipping synchronization");
             return;
         }
 
+        Set<ToDoItem> readToDoItems = readToDosOpt.get();
+
         Set<ToDoItem> todosInRepository = repository.getAll();
 
-        if (todosInRepository.equals(readToDos)) {
+
+        if (todosInRepository.equals(readToDoItems)) {
             logger.debug("No changes detected for ToDos");
             return;
         }
 
-        Set<ToDoItem> toRemove = computeToRemove(todosInRepository, readToDos);
-        Set<ToDoItem> toAdd = computeToAdd(todosInRepository, readToDos);
+        Set<ToDoItem> toRemove = computeToRemove(todosInRepository, readToDoItems);
+        Set<ToDoItem> toAdd = computeToAdd(todosInRepository, readToDoItems);
 
         applyRemovals(toRemove);
         applyAdditions(toAdd);
     }
 
-    private Set<ToDoItem> readToDos() {
+    private Optional<Set<ToDoItem>> readToDos() {
         try {
             List<ToDoItem> items = toDoReader.read();
-            return new HashSet<>(items);
+            return Optional.of(new HashSet<>(items));
         } catch (IOException e) {
             logger.warn("Cannot read ToDos [ message={} ]", e.getMessage());
-            return Set.of();
+            return Optional.empty();
         }
     }
 

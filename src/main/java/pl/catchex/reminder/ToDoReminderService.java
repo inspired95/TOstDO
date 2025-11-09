@@ -6,6 +6,7 @@ import pl.catchex.frequency.ToDoFrequencyService;
 import pl.catchex.model.ToDoIntervalMinutes;
 import pl.catchex.model.ToDoItem;
 import pl.catchex.model.ToDoRepositoryListener;
+import pl.catchex.tray.NotificationSender;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ public class ToDoReminderService implements ToDoRepositoryListener {
 
     private final ToDoFrequencyService frequencyService;
     private final ScheduledExecutorService executorService;
+    private final NotificationSender notificationSender; // may be null, then only logging is performed
     private final Map<ToDoItem, ScheduledFuture<?>> activeReminders = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(ToDoReminderService.class);
 
@@ -29,10 +31,12 @@ public class ToDoReminderService implements ToDoRepositoryListener {
      *
      * @param frequencyService service to calculate reminder intervals
      * @param executorService  executor to run scheduled tasks
+     * @param notificationSender optional notification sender (may be null)
      */
-    public ToDoReminderService(ToDoFrequencyService frequencyService, ScheduledExecutorService executorService) {
+    public ToDoReminderService(ToDoFrequencyService frequencyService, ScheduledExecutorService executorService, NotificationSender notificationSender) {
         this.frequencyService = frequencyService;
         this.executorService = executorService;
+        this.notificationSender = notificationSender;
     }
 
     @Override
@@ -50,6 +54,19 @@ public class ToDoReminderService implements ToDoRepositoryListener {
             logger.info("--- TODO REMINDER (every {} min) ---", intervalMinutes);
             logger.info("{}", item);
             logger.info("-------------------------------------------------");
+            // Send a notification via NotificationSender if injected
+            try {
+                if (notificationSender != null) {
+                    String title = "TOstDO - reminder";
+                    String message = item.toString();
+                    notificationSender.send(title, message, java.awt.TrayIcon.MessageType.INFO);
+                } else {
+                    logger.debug("NotificationSender is not available - GUI notifications disabled");
+                }
+            } catch (Throwable t) {
+                // Do not break reminder scheduling if GUI fails
+                logger.warn("Exception while sending notification: {}", t.getMessage());
+            }
         };
 
         ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(

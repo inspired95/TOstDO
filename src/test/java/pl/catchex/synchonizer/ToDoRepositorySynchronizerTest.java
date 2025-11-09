@@ -22,58 +22,78 @@ class ToDoRepositorySynchronizerTest {
     @BeforeEach
     void setUp() {
         reader = mock(ToDoReader.class);
-        // use real repository implementation for integration-style testing
         repository = new ToDoRepository();
         synchronizer = new ToDoRepositorySynchronizer(reader, repository);
     }
 
     @Test
     void noChanges_doesNotModifyRepository() throws IOException {
+        // given
         ToDoItem item = new ToDoItem.Builder().task("task1").priority(ToDoItem.Priority.MEDIUM).dueDate(LocalDate.now()).build();
         when(reader.read()).thenReturn(List.of(item));
-        // repository already contains the item
         repository.add(item);
 
+        // when
         synchronizer.onFileModified(Path.of("dummy"));
 
-        // repository should still contain the item
+        // then
         assertTrue(repository.contains(item));
     }
 
     @Test
     void addOnly_addsItemToRepository() throws IOException {
+        // given
         ToDoItem item = new ToDoItem.Builder().task("task2").priority(ToDoItem.Priority.HIGH).dueDate(null).build();
         when(reader.read()).thenReturn(List.of(item));
 
+        // when
         synchronizer.onFileModified(Path.of("dummy"));
 
+        // then
         assertTrue(repository.contains(item));
     }
 
     @Test
     void removeOnly_removesItemFromRepository() throws IOException {
+        // given
         ToDoItem item = new ToDoItem.Builder().task("task3").priority(ToDoItem.Priority.LOW).dueDate(null).build();
         when(reader.read()).thenReturn(List.of());
-        // repository initially contains the item
         repository.add(item);
 
+        // when
         synchronizer.onFileModified(Path.of("dummy"));
 
+        // then
         assertFalse(repository.contains(item));
     }
 
     @Test
     void addAndRemove_updatesRepositoryAccordingly() throws IOException {
+        // given
         ToDoItem existing = new ToDoItem.Builder().task("existing").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
         ToDoItem newItem = new ToDoItem.Builder().task("new").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
-
-        // initial state: repository has existing
         repository.add(existing);
         when(reader.read()).thenReturn(List.of(newItem));
 
+        // when
         synchronizer.onFileModified(Path.of("dummy"));
 
+        // then
         assertFalse(repository.contains(existing));
         assertTrue(repository.contains(newItem));
+    }
+
+    @Test
+    void readThrowsIOException_skipsSynchronization() throws IOException {
+        // given
+        ToDoItem existing = new ToDoItem.Builder().task("existing-io").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
+        repository.add(existing);
+        when(reader.read()).thenThrow(new IOException("read error"));
+
+        // when
+        synchronizer.onFileModified(Path.of("dummy"));
+
+        // then
+        assertTrue(repository.contains(existing));
     }
 }

@@ -63,7 +63,7 @@ public class FileWatcher {
      * @throws IOException when closing the watch service fails
      */
     public void stop() throws IOException {
-        logger.info("Stopping watcher...");
+        logger.info("Stopping file watcher...");
 
         // This will cause the watchService.take() to throw ClosedWatchServiceException
         if (watchService != null) {

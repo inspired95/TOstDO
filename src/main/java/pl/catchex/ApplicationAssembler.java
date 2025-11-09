@@ -13,6 +13,9 @@ import pl.catchex.reminder.ToDoReminderService;
 import pl.catchex.synchonizer.ToDoRepositorySynchronizer;
 import pl.catchex.filewatcher.FileWatcher;
 import pl.catchex.filewatcher.DebounceCondition;
+import pl.catchex.tray.NotificationSender;
+import pl.catchex.tray.TrayService;
+import pl.catchex.lifecycle.ApplicationStopper;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,7 +25,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Non-static application assembler that builds and runs the application components.
@@ -37,24 +39,37 @@ public class ApplicationAssembler {
 
     private final CountDownLatch shutdownLatch;
     private final AppConfiguration config;
+    private final NotificationSender notificationSender;
 
     private FileWatcher todoFileWatcher;
 
-    // Keep references so we can unregister listeners during shutdown
     private ToDoRepository repository;
     private ToDoRepositorySynchronizer synchronizer;
 
-    private ToDoReminderService reminderService; // <-- NOWE POLE
-    private ScheduledExecutorService reminderExecutor; // <-- NOWE POLE
+    private ToDoReminderService reminderService;
+    private ScheduledExecutorService reminderExecutor;
+    private final TrayService createdTrayService;
+    private final pl.catchex.lifecycle.ApplicationStopperFactory applicationStopperFactory;
 
     /**
      * Create a new ApplicationAssembler using the provided configuration.
      *
      * @param config application configuration used to build components
      */
-    public ApplicationAssembler(AppConfiguration config) {
+    public ApplicationAssembler(AppConfiguration config, NotificationSender notificationSender, TrayService createdTrayService) {
+        this(config, notificationSender, createdTrayService, new pl.catchex.lifecycle.DefaultApplicationStopperFactory());
+    }
+
+    /**
+     * Constructor that accepts an ApplicationStopperFactory to allow tests to
+     * inject a custom factory producing mock or instrumented stoppers.
+     */
+    public ApplicationAssembler(AppConfiguration config, NotificationSender notificationSender, TrayService createdTrayService, pl.catchex.lifecycle.ApplicationStopperFactory applicationStopperFactory) {
         this.config = config;
+        this.notificationSender = notificationSender;
+        this.createdTrayService = createdTrayService;
         this.shutdownLatch = new CountDownLatch(1);
+        this.applicationStopperFactory = applicationStopperFactory;
     }
 
     /**
@@ -76,20 +91,17 @@ public class ApplicationAssembler {
             synchronizer = createSynchronizer(todoReader);
 
             this.reminderExecutor = createReminderExecutor();
-            this.reminderService = createReminderService(this.reminderExecutor);
-            this.repository.addListener(this.reminderService); // Rejestrujemy listenera
-            logger.info("ToDoReminderService zarejestrowany w repozytorium.");
-            // initial sync to populate repository
+            this.reminderService = createReminderService(this.reminderExecutor, this.notificationSender);
+            this.repository.addListener(this.reminderService);
+            logger.info("ToDoReminderService registered with repository.");
             synchronizer.synchronizeRepository();
 
-            // start watching file changes
             startWatcher(todoFile, synchronizer);
 
-            // block until shutdown
             awaitShutdown();
 
         } catch (IOException e) {
-            logger.error("I/O exception [ message={} ]", e.getMessage());
+            logger.error("I/O exception [ message={}]", e.getMessage());
         } finally {
             logger.info("All task finished -> shutdown main thread");
             logger.info("TOstDO application completely finished");
@@ -103,12 +115,11 @@ public class ApplicationAssembler {
         }));
     }
 
-    // Calls public stop() and handles IOException internally for shutdown hook usage
     private void safeStop() {
         try {
             stop();
         } catch (IOException e) {
-            logger.error("I/O exception while stopping application [ message={} ]", e.getMessage());
+            logger.error("I/O exception while stopping application [ message={}]", e.getMessage());
         }
     }
 
@@ -127,14 +138,12 @@ public class ApplicationAssembler {
     }
 
     private ToDoRepositorySynchronizer createSynchronizer(ToDoReader todoReader) {
-        // store repository and synchronizer references so we can clean them up on stop()
         this.repository = new ToDoRepository();
         this.synchronizer = new ToDoRepositorySynchronizer(todoReader, this.repository);
         return this.synchronizer;
     }
 
     private ScheduledExecutorService createReminderExecutor() {
-        // Używamy prostego ThreadFactory, aby uniknąć zależności od wersji JDK/Project Loom
         ThreadFactory factory = runnable -> {
             Thread t = new Thread(runnable);
             t.setDaemon(true);
@@ -144,13 +153,12 @@ public class ApplicationAssembler {
         return Executors.newSingleThreadScheduledExecutor(factory);
     }
 
-    private ToDoReminderService createReminderService(ScheduledExecutorService executor) {
+    private ToDoReminderService createReminderService(ScheduledExecutorService executor, NotificationSender notificationSender) {
         ToDoFrequencyService frequencyService = new ToDoFrequencyService(
                 Clock.systemDefaultZone(),
                 config.getConfiguration().getReminderConfiguration()
         );
-        // Przekazujemy dedykowany logger do serwisu
-        return new ToDoReminderService(frequencyService, executor);
+        return new ToDoReminderService(frequencyService, executor, notificationSender);
     }
 
     private void startWatcher(Path todoFile, ToDoRepositorySynchronizer synchronizer) throws IOException {
@@ -163,7 +171,7 @@ public class ApplicationAssembler {
         try {
             shutdownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("Main thread interrupted [ message={} ]", e.getMessage());
+            logger.error("Main thread interrupted [ message={}]", e.getMessage());
             Thread.currentThread().interrupt();
         }
     }
@@ -175,40 +183,20 @@ public class ApplicationAssembler {
      * @throws IOException when closing the file watcher fails
      */
     public void stop() throws IOException {
-        // Unregister the synchronizer from the watcher to avoid callbacks during shutdown
-        if (this.todoFileWatcher != null && this.synchronizer != null) {
-            try {
-                this.todoFileWatcher.removeListener(this.synchronizer);
-            } catch (Exception ex) {
-                logger.debug("Failed to remove watcher listener: {}", ex.getMessage());
-            }
-        }
+        // create an ApplicationStopper via the factory and stop components
+        pl.catchex.lifecycle.ApplicationStopper stopper = this.applicationStopperFactory.create(
+                this.todoFileWatcher,
+                this.synchronizer,
+                this.reminderService,
+                this.reminderExecutor,
+                this.createdTrayService
+        );
 
-        if (this.todoFileWatcher != null) {
-            this.todoFileWatcher.stop();
-        }
+        stopper.stop();
 
-        // Zatrzymaj serwisy, które konsumują zdarzenia
-        if (this.reminderService != null) {
-            this.reminderService.stop(); // Zatrzymaj nasz nowy serwis
-        }
-
-        // Bezpieczne zatrzymanie executor'a przypisanego do przypomnień
-        if (this.reminderExecutor != null) {
-            try {
-                this.reminderExecutor.shutdown();
-                if (!this.reminderExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    this.reminderExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                logger.debug("Interrupted while stopping reminder executor: {}", e.getMessage());
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        // Optionally, clear repository reference to help GC
+        // clear references to allow GC and signal shutdown
         this.synchronizer = null;
-        this.reminderService = null; // <-- NOWA LINIA
+        this.reminderService = null;
         this.repository = null;
 
         shutdownLatch.countDown();

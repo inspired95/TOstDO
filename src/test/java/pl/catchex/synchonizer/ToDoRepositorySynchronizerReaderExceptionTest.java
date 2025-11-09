@@ -25,15 +25,16 @@ class ToDoRepositorySynchronizerReaderExceptionTest {
 
     @Test
     void readerIOException_doesNotModifyRepository() throws IOException {
+        // given
         ToDoItem existing = new ToDoItem.Builder().task("existing").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
         repository.add(existing);
 
         when(reader.read()).thenThrow(new IOException("io error"));
 
+        // when
         synchronizer.onFileModified(Path.of("dummy"));
 
-        // repository should be unchanged
+        // then
         assertTrue(repository.contains(existing));
     }
 }
-

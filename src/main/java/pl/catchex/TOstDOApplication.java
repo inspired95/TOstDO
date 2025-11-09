@@ -1,5 +1,7 @@
 package pl.catchex;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.catchex.config.AppConfiguration;
@@ -8,6 +10,7 @@ import pl.catchex.config.cache.ConfigCache;
 import pl.catchex.config.cache.InMemoryConfigCache;
 import pl.catchex.config.source.ClasspathConfigLoader;
 import pl.catchex.config.source.ConfigSource;
+import pl.catchex.di.AppModule;
 
 import java.util.Optional;
 
@@ -25,8 +28,10 @@ public class TOstDOApplication {
         Optional<AppConfiguration> appConfiguration = configurationService.getAppConfiguration();
 
         appConfiguration.ifPresentOrElse(config -> {
-            ApplicationAssembler assembler = new ApplicationAssembler(config);
-            assembler.run();
+            logger.info("Configuration  loaded");
+            Injector injector = Guice.createInjector(new AppModule(config));
+            pl.catchex.bootstrap.ApplicationBootstrap bootstrap = injector.getInstance(pl.catchex.bootstrap.ApplicationBootstrap.class);
+            bootstrap.run();
         }, () -> logger.error("Configuration not loaded"));
     }
 }

@@ -115,5 +115,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Guice DI -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>6.0.0</version>
+        </dependency>
+
     </dependencies>
 </project>

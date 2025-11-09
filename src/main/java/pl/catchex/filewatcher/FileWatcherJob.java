@@ -38,11 +38,11 @@ public class FileWatcherJob implements Runnable {
         } catch (InterruptedException e) {
             // Standard way to stop: Thread was interrupted.
             logger.warn("Job interrupted.");
-            Thread.currentThread().interrupt(); // Restore the interrupt flag
+            Thread.currentThread().interrupt();
             return null;
         } catch (ClosedWatchServiceException e) {
             // Standard way to stop: service.close() was called.
-            logger.warn("WatchService closed, stopping thread.");
+            logger.info("WatchService closed, stopping thread.");
             return null;
         }
     }
