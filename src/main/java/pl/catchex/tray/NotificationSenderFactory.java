@@ -3,7 +3,6 @@ package pl.catchex.tray;
 /**
  * Factory that provides a NotificationSender implementation and (optionally)
  * the created TrayService instance if the factory created one.
- *
  * Use NotificationSenderFactory.createDefault() to attempt to create
  * a real tray (if SystemTray is available). On failure the returned Provider
  * has sender==null which indicates GUI notifications are not available.
@@ -14,15 +13,7 @@ public final class NotificationSenderFactory {
         // util
     }
 
-    public static final class Provider {
-        private final NotificationSender notificationSender;
-        private final TrayService trayService;
-
-        public Provider(NotificationSender notificationSender, TrayService trayService) {
-            this.notificationSender = notificationSender;
-            this.trayService = trayService;
-        }
-
+    public record Provider(NotificationSender notificationSender, TrayService trayService) {
         /**
          * Returns the NotificationSender (may be null if GUI creation failed).
          */
@@ -46,7 +37,7 @@ public final class NotificationSenderFactory {
         try {
             TrayService trayService = new TrayService();
             return new Provider(trayService::showNotification, trayService);
-        } catch (Throwable t) {
+        } catch (Exception e) {
             // Don't propagate the exception: if GUI creation failed, return no sender
             return new Provider(null, null);
         }

@@ -63,9 +63,9 @@ public class ToDoReminderService implements ToDoRepositoryListener {
                 } else {
                     logger.debug("NotificationSender is not available - GUI notifications disabled");
                 }
-            } catch (Throwable t) {
+            } catch (Exception e) {
                 // Do not break reminder scheduling if GUI fails
-                logger.warn("Exception while sending notification: {}", t.getMessage());
+                logger.warn("Exception while sending notification: {}", e.getMessage());
             }
         };
 

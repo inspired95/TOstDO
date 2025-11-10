@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AppDirectoryInitializerResourceMissingTest {
+class AppDirectoryInitializerResourceMissingTest {
 
     static class DummyFS implements FileSystemService {
         private final Path home;
@@ -45,7 +45,7 @@ public class AppDirectoryInitializerResourceMissingTest {
         }
 
         @Override
-        public void copy(InputStream in, Path target) throws IOException {
+        public void copy(InputStream in, Path target) {
             throw new UnsupportedOperationException("copy should not be called when resource is missing");
         }
 
@@ -57,7 +57,7 @@ public class AppDirectoryInitializerResourceMissingTest {
     }
 
     @Test
-    public void perform_handlesMissingResourceGracefully(@TempDir Path tempDir) throws Exception {
+    void perform_handlesMissingResourceGracefully(@TempDir Path tempDir) throws Exception {
         DummyFS fs = new DummyFS(tempDir);
 
         // call initializer with our dummy fs (resource stream will be null)
