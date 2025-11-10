@@ -5,7 +5,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -58,19 +57,19 @@ public class AppDirectoryInitializerResourceMissingTest {
     }
 
     @Test
-    public void initialize_handlesMissingResourceGracefully(@TempDir Path tempDir) throws Exception {
+    public void perform_handlesMissingResourceGracefully(@TempDir Path tempDir) throws Exception {
         DummyFS fs = new DummyFS(tempDir);
 
         // call initializer with our dummy fs (resource stream will be null)
-        AppDirectoryInitializer.initialize(fs);
+        new AppDirectoryInitializer(fs, new SampleTodoContentProvider()).perform();
 
-        Path appDir = tempDir.resolve(AppDirectoryInitializer.APP_DIR_NAME);
+        Path appDir = tempDir.resolve(AppConstants.APP_DIR_NAME);
         assertTrue(Files.exists(appDir), "app dir should still be created");
 
-        Path config = appDir.resolve(AppDirectoryInitializer.CONFIG_FILENAME);
+        Path config = appDir.resolve(AppConstants.CONFIG_FILENAME);
         assertFalse(Files.exists(config), "config.yaml should NOT be created when resource is missing");
 
-        Path todo = appDir.resolve(AppDirectoryInitializer.TODO_FILENAME);
+        Path todo = appDir.resolve(AppConstants.TODO_FILENAME);
         assertTrue(Files.exists(todo), "todo.md should still be created");
 
         try {

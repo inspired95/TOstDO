@@ -10,17 +10,22 @@ import pl.catchex.config.cache.InMemoryConfigCache;
 import pl.catchex.config.source.ConfigSource;
 import pl.catchex.config.source.FileConfigLoader;
 import pl.catchex.di.AppModule;
+import pl.catchex.di.BootstrapModule;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ApplicationBootstrapTest {
+class ApplicationBootstrapTest {
 
     @Test
-    public void bootstrapStartsAndStopsWithNoopNotifications() throws Exception {
+    void bootstrapStartsAndStopsWithNoopNotifications() throws Exception {
         // Ensure default application directory and config exist (matches runtime behavior)
-        AppDirectoryInitializer.initializeSafely();
+        Injector bootstrapInjector = Guice.createInjector(new BootstrapModule());
+        AppDirectoryInitializer initializer = bootstrapInjector.getInstance(AppDirectoryInitializer.class);
+        initializer.perform();
 
         // given
         ConfigCache configCache = new InMemoryConfigCache();
@@ -33,11 +38,31 @@ public class ApplicationBootstrapTest {
 
         // given
         Injector injector = Guice.createInjector(new AppModule(appConfiguration.get()));
-        ApplicationBootstrap bootstrap = injector.getInstance(ApplicationBootstrap.class);
+        final ApplicationAssembler assembler = injector.getInstance(ApplicationAssembler.class);
+
+        // Use a latch to wait until the bootstrap run() actually starts
+        CountDownLatch started = new CountDownLatch(1);
+
+        // Create a test ApplicationBootstrap that signals when run() begins
+        class TestApplicationBootstrap extends pl.catchex.bootstrap.ApplicationBootstrap {
+            TestApplicationBootstrap(ApplicationAssembler assembler, AppDirectoryInitializer initializer) {
+                super(assembler, initializer);
+            }
+
+            @Override
+            public void run() {
+                // signal that run() is starting
+                started.countDown();
+                super.run();
+            }
+        }
+
+        // instantiate test bootstrap using the same initializer we used earlier
+        TestApplicationBootstrap testBootstrap = new TestApplicationBootstrap(assembler, initializer);
 
         Thread appThread = new Thread(() -> {
             try {
-                bootstrap.run();
+                testBootstrap.run();
             } catch (Throwable t) {
                 // If run throws, fail the test by rethrowing as runtime
                 throw new RuntimeException(t);
@@ -47,11 +72,12 @@ public class ApplicationBootstrapTest {
         // when
         appThread.start();
 
-        // wait a short time for startup to proceed
-        Thread.sleep(500);
+        // wait for bootstrap to actually start (replace Thread.sleep)
+        boolean startedOk = started.await(2, TimeUnit.SECONDS);
+        assertTrue(startedOk, "Bootstrap did not start within timeout");
 
         // when
-        bootstrap.stop();
+        testBootstrap.stop();
 
         // wait for the thread to terminate
         appThread.join(2000);

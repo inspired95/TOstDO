@@ -11,8 +11,7 @@ import java.util.Objects;
 
 /**
  * Concrete implementation that is responsible for creating the default configuration file
- * and writing it to the user's application directory. Depends on FileSystemService and is
- * suitable for injection/mocking in tests.
+ * and writing it to the user's application directory. Depends on FileSystemService for file operations.
  */
 public class DefaultConfigCreatorImpl implements ConfigCreator {
 
@@ -27,23 +26,21 @@ public class DefaultConfigCreatorImpl implements ConfigCreator {
 
     @Override
     public void createDefaultConfig(Path appDir) throws IOException {
-        // Use the provided appDir (injected during tests) instead of DefaultPaths, to keep behavior testable
-        Path targetConfig = appDir.resolve(AppDirectoryInitializer.CONFIG_FILENAME);
+        Path targetConfig = appDir.resolve(AppConstants.CONFIG_FILENAME);
         if (fs.exists(targetConfig)) {
             logger.debug("Configuration file already exists: {}", targetConfig);
             return;
         }
 
-        try (InputStream in = fs.getResourceAsStream(AppDirectoryInitializer.RESOURCE_CONFIGURATION)) {
+        try (InputStream in = fs.getResourceAsStream(AppConstants.RESOURCE_CONFIGURATION)) {
             if (in == null) {
-                logger.warn("Default resource '{}' not found on classpath, skipping creating {}", AppDirectoryInitializer.RESOURCE_CONFIGURATION, targetConfig);
+                logger.warn("Default resource '{}' not found on classpath, skipping creating {}", AppConstants.RESOURCE_CONFIGURATION, targetConfig);
                 return;
             }
 
-            // Read full content in a concise, charset-safe manner
             String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 
-            String newTodoPath = appDir.resolve(AppDirectoryInitializer.TODO_FILENAME).toString();
+            String newTodoPath = appDir.resolve(AppConstants.TODO_FILENAME).toString();
             String modified = applyTodoPathReplacement(content, newTodoPath);
 
             logger.debug("DefaultConfigCreator: modified config content:\n{}", modified);

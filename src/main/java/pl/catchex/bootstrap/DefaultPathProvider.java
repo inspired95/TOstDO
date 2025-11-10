@@ -26,17 +26,16 @@ public class DefaultPathProvider implements PathProvider {
 
     @Override
     public Path getAppDir() {
-        return getUserHome().resolve(AppDirectoryInitializer.APP_DIR_NAME);
+        return getUserHome().resolve(AppConstants.APP_DIR_NAME);
     }
 
     @Override
     public Path getConfigPath() {
-        return getAppDir().resolve(AppDirectoryInitializer.CONFIG_FILENAME);
+        return getAppDir().resolve(AppConstants.CONFIG_FILENAME);
     }
 
     @Override
     public Path getTodoPath() {
-        return getAppDir().resolve(AppDirectoryInitializer.TODO_FILENAME);
+        return getAppDir().resolve(AppConstants.TODO_FILENAME);
     }
 }
-

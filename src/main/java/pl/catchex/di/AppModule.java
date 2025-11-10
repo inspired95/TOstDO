@@ -12,10 +12,8 @@ import pl.catchex.tray.NotificationSenderFactory;
 import pl.catchex.tray.TrayService;
 import pl.catchex.lifecycle.ApplicationStopperFactory;
 import pl.catchex.lifecycle.DefaultApplicationStopperFactory;
-import pl.catchex.bootstrap.AppDirectoryInitializer;
 import pl.catchex.bootstrap.FileSystemService;
 import pl.catchex.bootstrap.RealFileSystemService;
-import pl.catchex.bootstrap.TodoContentProvider;
 
 import java.time.Clock;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,8 +26,15 @@ public class AppModule extends AbstractModule {
     private final NotificationSenderFactory.Provider trayProvider;
 
     public AppModule(AppConfiguration config) {
+        this(config, NotificationSenderFactory.createNoop());
+    }
+
+    /**
+     * Constructor that allows providing a custom NotificationSenderFactory.Provider (useful for production to pass a real tray provider).
+     */
+    public AppModule(AppConfiguration config, NotificationSenderFactory.Provider trayProvider) {
         this.config = config;
-        this.trayProvider = NotificationSenderFactory.createDefaultTrayService();
+        this.trayProvider = trayProvider == null ? NotificationSenderFactory.createNoop() : trayProvider;
     }
 
     @Override
@@ -51,8 +56,14 @@ public class AppModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public NotificationSender provideNoopNotificationSender() {
-        NotificationSender sender = trayProvider.getNotificationSender();
+    public pl.catchex.tray.NotificationSenderFactory.Provider provideTrayProvider() {
+        return this.trayProvider;
+    }
+
+    @Provides
+    @Singleton
+    public NotificationSender provideNoopNotificationSender(pl.catchex.tray.NotificationSenderFactory.Provider provider) {
+        NotificationSender sender = provider.getNotificationSender();
         if (sender == null) {
             sender = NotificationSenderFactory.createNoop().getNotificationSender();
         }
@@ -79,8 +90,8 @@ public class AppModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ApplicationAssembler provideApplicationAssembler(NotificationSender sender, ApplicationStopperFactory stopperFactory) {
-        TrayService created = trayProvider.getTrayService();
+    public ApplicationAssembler provideApplicationAssembler(NotificationSender sender, ApplicationStopperFactory stopperFactory, pl.catchex.tray.NotificationSenderFactory.Provider provider) {
+        TrayService created = provider.getTrayService();
         return new ApplicationAssembler(config, sender, created, stopperFactory);
     }
 
@@ -106,12 +117,5 @@ public class AppModule extends AbstractModule {
     @Singleton
     public pl.catchex.bootstrap.ConfigCreator provideConfigCreator(FileSystemService fs) {
         return new pl.catchex.bootstrap.DefaultConfigCreatorImpl(fs);
-    }
-
-    @Provides
-    @Singleton
-    public AppDirectoryInitializer provideAppDirectoryInitializer(FileSystemService fs, pl.catchex.bootstrap.PathProvider pathProvider, pl.catchex.bootstrap.ConfigCreator configCreator) {
-        // AppDirectoryInitializer accepts a FileSystemService, TodoContentProvider and ConfigCreator
-        return new AppDirectoryInitializer(fs, new TodoContentProvider(), configCreator);
     }
 }

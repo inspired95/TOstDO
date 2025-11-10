@@ -14,56 +14,27 @@ import java.nio.file.Path;
 public class AppDirectoryInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger(AppDirectoryInitializer.class);
-    public static final String APP_DIR_NAME = ".TOstDO";
-    public static final String CONFIG_FILENAME = "config.yaml";
-    public static final String RESOURCE_CONFIGURATION = "configuration.yaml";
-    public static final String TODO_FILENAME = "todo.md";
 
     private final FileSystemService fs;
-    private final TodoContentProvider todoContentProvider;
+    private final SampleTodoContentProvider sampleTodoContentProvider;
     private final ConfigCreator configCreator;
 
-    // prevent no-arg construction from outside - prefer injection
-    public AppDirectoryInitializer(FileSystemService fs, TodoContentProvider todoContentProvider) {
-        this(fs, todoContentProvider, new DefaultConfigCreatorImpl(fs));
+    public AppDirectoryInitializer(FileSystemService fs, SampleTodoContentProvider sampleTodoContentProvider) {
+        this(fs, sampleTodoContentProvider, new DefaultConfigCreatorImpl(fs));
     }
 
-    // Preferred constructor for DI: accept ConfigCreator
-    public AppDirectoryInitializer(FileSystemService fs, TodoContentProvider todoContentProvider, ConfigCreator configCreator) {
+    public AppDirectoryInitializer(FileSystemService fs, SampleTodoContentProvider sampleTodoContentProvider, ConfigCreator configCreator) {
         this.fs = fs;
-        this.todoContentProvider = todoContentProvider;
+        this.sampleTodoContentProvider = sampleTodoContentProvider;
         this.configCreator = configCreator;
     }
 
     /**
-     * Backwards-compatible convenience: use the real file system and run safely (logs exceptions).
+     * Perform initialization of application directory and default files.
      */
-    public static void initializeSafely() {
-        FileSystemService fs = new RealFileSystemService();
-        AppDirectoryInitializer initializer = new AppDirectoryInitializer(fs, new TodoContentProvider(), new DefaultConfigCreatorImpl(fs));
-        try {
-            initializer.initialize();
-        } catch (IOException e) {
-            logger.warn("Failed to initialize application directory or default files: {}", e.getMessage());
-        } catch (Exception e) {
-            logger.warn("Unexpected error during app directory initialization: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Backwards-compatible convenience: allow tests to call AppDirectoryInitializer.initialize(fs)
-     */
-    public static void initialize(FileSystemService fs) throws IOException {
-        AppDirectoryInitializer initializer = new AppDirectoryInitializer(fs, new TodoContentProvider());
-        initializer.initialize();
-    }
-
-    /**
-     * Perform initialization. Throws IOException to allow tests to observe failures.
-     */
-    public void initialize() throws IOException {
+    public void perform() throws IOException {
         Path home = fs.getUserHome();
-        Path appDir = home.resolve(APP_DIR_NAME);
+        Path appDir = home.resolve(AppConstants.APP_DIR_NAME);
 
         ensureAppDir(appDir);
         ensureConfig(appDir);
@@ -80,12 +51,11 @@ public class AppDirectoryInitializer {
     }
 
     private void ensureConfig(Path appDir) throws IOException {
-        // Use injected ConfigCreator (constructor ensures it's non-null)
         this.configCreator.createDefaultConfig(appDir);
     }
 
     private void ensureTodo(Path appDir) throws IOException {
-        Path todoFile = appDir.resolve(TODO_FILENAME);
+        Path todoFile = appDir.resolve(AppConstants.TODO_FILENAME);
         if (!fs.exists(todoFile)) {
             writeSampleTodo(todoFile);
             logger.info("Sample todo file created at {}", todoFile);
@@ -95,7 +65,7 @@ public class AppDirectoryInitializer {
     }
 
     private void writeSampleTodo(Path todoFile) throws IOException {
-        String sample = todoContentProvider.getSampleContent();
+        String sample = sampleTodoContentProvider.getSampleContent();
         fs.writeString(todoFile, sample, StandardCharsets.UTF_8);
     }
 }

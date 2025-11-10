@@ -97,19 +97,20 @@ This sequence shows simplified steps that occur during application startup and b
 ```mermaid
 sequenceDiagram
     participant App as TOstDOApplication
-    participant Guice as Guice/AppModule
+    participant BootstrapInjector as Guice(BootstrapModule)
     participant Bootstrap as AppDirectoryInitializer
     participant ConfigCreator as DefaultConfigCreatorImpl
     participant FS as FileSystemService
     participant ConfigLoader as FileConfigLoader
     participant ConfigSvc as ConfigurationService
+    participant Guice2 as Guice/AppModule
     participant Assembler as ApplicationAssembler
     participant Bootstrapper as ApplicationBootstrap
 
-    App->>Guice: Create injector (AppModule)
-    Guice->>Assembler: Provide ApplicationAssembler
-    App->>Bootstrapper: Start bootstrap
-    Bootstrapper->>Bootstrap: call initializeSafely()
+    %% New flow: bootstrap (creates default config) runs before loading AppConfiguration
+    App->>BootstrapInjector: Create injector (BootstrapModule)
+    BootstrapInjector->>Bootstrap: Provide AppDirectoryInitializer
+    BootstrapInjector->>Bootstrap: call perform()  %% previously a static helper was used here; now bootstrap uses DI
     Bootstrap->>FS: getUserHome()
     Bootstrap->>FS: create app dir if missing
     Bootstrap->>ConfigCreator: createDefaultConfig(appDir)
@@ -121,8 +122,11 @@ sequenceDiagram
     ConfigSvc->>ConfigLoader: FileConfigLoader.loadAppConfiguration()
     ConfigLoader->>FS: read config.yaml
     ConfigSvc-->>App: AppConfiguration
-    App->>Assembler: create application parts
-    Assembler->>Bootstrapper: run application
+
+    App->>Guice2: Create injector (AppModule) with AppConfiguration
+    Guice2->>Assembler: Provide ApplicationAssembler
+    App->>Bootstrapper: Start bootstrap (get ApplicationBootstrap)
+    Bootstrapper->>Assembler: run application
 ```
 
 ## How to run the application
