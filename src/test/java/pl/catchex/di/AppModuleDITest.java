@@ -6,7 +6,6 @@ import pl.catchex.config.AppConfiguration;
 import pl.catchex.lifecycle.ApplicationStopper;
 import pl.catchex.lifecycle.ApplicationStopperFactory;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AppModuleDITest {
@@ -16,12 +15,10 @@ class AppModuleDITest {
         // given
         AppConfiguration cfg = new AppConfiguration();
 
-        // create mocks that we will pass into the assembler
         ApplicationStopperFactory mockFactory = mock(ApplicationStopperFactory.class);
         ApplicationStopper mockStopper = mock(ApplicationStopper.class);
         when(mockFactory.create(any(), any(), any(), any(), any())).thenReturn(mockStopper);
 
-        // construct assembler directly with mock factory (no Guice here)
         ApplicationAssembler assembler = new ApplicationAssembler(cfg, null, null, mockFactory);
 
         // when
