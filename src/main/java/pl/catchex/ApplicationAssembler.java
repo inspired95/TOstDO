@@ -2,6 +2,7 @@ package pl.catchex;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.catchex.bootstrap.AppDirectoryInitializer;
 import pl.catchex.common.DateParser;
 import pl.catchex.config.AppConfiguration;
 import pl.catchex.frequency.ToDoFrequencyService;
@@ -80,6 +81,9 @@ public class ApplicationAssembler {
      */
     public void run() {
         logger.info("TOstDO application starting (assembled)...");
+
+        // Ensure user application directory and default files exist
+        AppDirectoryInitializer.initializeSafely();
 
         registerShutdownHook();
 

@@ -1,0 +1,21 @@
+%% Mermaid sequence diagram: ToDo file change synchronization
+sequenceDiagram
+    participant FW as FileWatcher
+    participant WatchJob as FileWatcherJob
+    participant Sync as ToDoRepositorySynchronizer
+    participant FS as FileSystemService
+    participant Repo as ToDoRepository
+
+    FW->>WatchJob: start watch loop
+    WatchJob->>FS: poll/WatchService.take()
+    alt change detected
+      WatchJob->>Sync: notifyChange(event)
+      Sync->>FS: readAllBytes(todoPath)
+      FS-->>Sync: content bytes
+      Sync->>Sync: parse content into List<ToDo>
+      Sync->>Repo: apply diffs (add/remove/modify)
+      Repo-->>Sync: applied (listeners notified)
+    else no change
+      WatchJob-->>FW: idle
+    end
+

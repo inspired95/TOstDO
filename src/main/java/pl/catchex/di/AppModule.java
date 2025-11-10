@@ -12,6 +12,10 @@ import pl.catchex.tray.NotificationSenderFactory;
 import pl.catchex.tray.TrayService;
 import pl.catchex.lifecycle.ApplicationStopperFactory;
 import pl.catchex.lifecycle.DefaultApplicationStopperFactory;
+import pl.catchex.bootstrap.AppDirectoryInitializer;
+import pl.catchex.bootstrap.FileSystemService;
+import pl.catchex.bootstrap.RealFileSystemService;
+import pl.catchex.bootstrap.TodoContentProvider;
 
 import java.time.Clock;
 import java.util.concurrent.ScheduledExecutorService;
@@ -84,5 +88,30 @@ public class AppModule extends AbstractModule {
     @Singleton
     public pl.catchex.bootstrap.ApplicationBootstrap provideApplicationBootstrap(ApplicationAssembler assembler) {
         return new pl.catchex.bootstrap.ApplicationBootstrap(assembler);
+    }
+
+    @Provides
+    @Singleton
+    public FileSystemService provideFileSystemService() {
+        return new RealFileSystemService();
+    }
+
+    @Provides
+    @Singleton
+    public pl.catchex.bootstrap.PathProvider providePathProvider(FileSystemService fs) {
+        return new pl.catchex.bootstrap.DefaultPathProvider(fs);
+    }
+
+    @Provides
+    @Singleton
+    public pl.catchex.bootstrap.ConfigCreator provideConfigCreator(FileSystemService fs) {
+        return new pl.catchex.bootstrap.DefaultConfigCreatorImpl(fs);
+    }
+
+    @Provides
+    @Singleton
+    public AppDirectoryInitializer provideAppDirectoryInitializer(FileSystemService fs, pl.catchex.bootstrap.PathProvider pathProvider, pl.catchex.bootstrap.ConfigCreator configCreator) {
+        // AppDirectoryInitializer accepts a FileSystemService, TodoContentProvider and ConfigCreator
+        return new AppDirectoryInitializer(fs, new TodoContentProvider(), configCreator);
     }
 }

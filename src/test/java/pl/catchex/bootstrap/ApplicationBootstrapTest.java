@@ -7,8 +7,8 @@ import pl.catchex.config.AppConfiguration;
 import pl.catchex.config.ConfigurationService;
 import pl.catchex.config.cache.ConfigCache;
 import pl.catchex.config.cache.InMemoryConfigCache;
-import pl.catchex.config.source.ClasspathConfigLoader;
 import pl.catchex.config.source.ConfigSource;
+import pl.catchex.config.source.FileConfigLoader;
 import pl.catchex.di.AppModule;
 
 import java.util.Optional;
@@ -19,14 +19,17 @@ public class ApplicationBootstrapTest {
 
     @Test
     public void bootstrapStartsAndStopsWithNoopNotifications() throws Exception {
+        // Ensure default application directory and config exist (matches runtime behavior)
+        AppDirectoryInitializer.initializeSafely();
+
         // given
         ConfigCache configCache = new InMemoryConfigCache();
-        ConfigSource configSource = new ClasspathConfigLoader();
+        ConfigSource configSource = new FileConfigLoader();
         ConfigurationService configurationService = new ConfigurationService(configCache, configSource);
         Optional<AppConfiguration> appConfiguration = configurationService.getAppConfiguration();
 
         // then
-        assertTrue(appConfiguration.isPresent(), "App configuration should be present on classpath");
+        assertTrue(appConfiguration.isPresent(), "App configuration should be present on default config path");
 
         // given
         Injector injector = Guice.createInjector(new AppModule(appConfiguration.get()));

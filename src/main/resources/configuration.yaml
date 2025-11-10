@@ -1,5 +1,8 @@
+# Default configuration resource.
+# IMPORTANT: keep the placeholder [path_to_todo.md_file] exactly as shown — DefaultConfigCreator
+# will replace it with the real path when initializing the application directory.
 configuration:
-  todoFilePath: C:\TOstDO\TODO.md
+  todoFilePath: [path_to_todo.md_file]
   todoItem:
     dateFormat: dd/MM/yyyy
     priority:

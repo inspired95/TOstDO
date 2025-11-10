@@ -1,0 +1,35 @@
+%% Mermaid sequence diagram: default configuration creation
+sequenceDiagram
+    participant App as TOstDOApplication
+    participant Bootstrapper as ApplicationBootstrap
+    participant Initializer as AppDirectoryInitializer
+    participant FS as FileSystemService
+    participant ConfigCreator as DefaultConfigCreatorImpl
+    participant Resource as ClasspathResource
+
+    App->>Bootstrapper: start()
+    Bootstrapper->>Initializer: initialize()
+    Initializer->>FS: getUserHome()
+    FS-->>Initializer: Path home
+    Initializer->>FS: resolve appDir and createDirectories(appDir) if not exists
+    Initializer->>ConfigCreator: createDefaultConfig(appDir)
+
+    ConfigCreator->>FS: getResourceAsStream("configuration.yaml")
+    alt resource available
+      FS-->>ConfigCreator: InputStream
+      ConfigCreator->>ConfigCreator: read entire stream (UTF-8)
+      ConfigCreator->>ConfigCreator: replace placeholder with appDir/todo.md
+      ConfigCreator->>FS: writeString(targetConfigPath, modifiedContent, UTF-8)
+      FS-->>ConfigCreator: success
+      ConfigCreator-->>Initializer: config created
+    else resource missing
+      FS-->>ConfigCreator: null
+      ConfigCreator-->>Initializer: skipped (logged)
+    end
+
+    Initializer->>FS: check todo.md exists
+    alt not exists
+      Initializer->>FS: writeString(todoPath, sampleContent, UTF-8)
+    end
+    Initializer-->>Bootstrapper: initialized
+
