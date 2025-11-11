@@ -70,6 +70,23 @@ jobs:
           mvn -q -DforceStdout help:evaluate -Dexpression=project.artifactId || true
           mvn -q -DforceStdout help:evaluate -Dexpression=project.version || true
 
+      - name: Verify shaded artifact exists
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          echo "Listing target content:"
+          ls -la target || true
+          # Look for any shaded jar produced by maven-shade-plugin
+          SHADDED=$(ls target/*-shaded.jar 2>/dev/null || true)
+          if [ -z "${SHADDED}" ]; then
+            echo "ERROR: No shaded jar found in target/. Preventing deploy to avoid uploading a non-runnable artifact." >&2
+            exit 1
+          fi
+          echo "Found shaded artifact(s):"
+          ls -la target/*-shaded.jar
+          echo "Shaded artifact size and checksum:"
+          for f in target/*-shaded.jar; do sha256sum "$f" || true; ls -lh "$f" || true; done
+
       - name: Deploy artifacts
         if: github.ref == 'refs/heads/main'
         env:
