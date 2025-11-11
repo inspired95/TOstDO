@@ -8,6 +8,14 @@
     <artifactId>TOstDO</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <!-- Distribution management: repository for internal artifact deployment -->
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <url>https://github.com/inspired95/TOstDO</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
