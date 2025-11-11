@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import pl.catchex.config.reader.reminder.PeriodFactorConfiguration;
 import pl.catchex.config.reader.reminder.PeriodThresholdConfiguration;
 import pl.catchex.config.reader.reminder.ReminderConfiguration;
-import pl.catchex.model.BaseInterval;
 import pl.catchex.model.ToDoIntervalMinutes;
 import pl.catchex.model.ToDoItem;
 import pl.catchex.testutil.MutableClock;
@@ -45,7 +44,7 @@ class ToDoFrequencyServiceTest {
         ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
 
         // then
-        ToDoIntervalMinutes expected = BaseInterval.LOW_PRIORITY_BASE_INTERVAL.getInterval();
+        ToDoIntervalMinutes expected = new ToDoIntervalMinutes(20); // default low priority base interval
         assertEquals(expected.value(), result.value());
     }
 
@@ -63,7 +62,7 @@ class ToDoFrequencyServiceTest {
         ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
 
         // then
-        int expected = (int) Math.round(BaseInterval.MEDIUM_PRIORITY_BASE_INTERVAL.getInterval().value() * 0.5);
+        int expected = (int) Math.round(new ToDoIntervalMinutes(15).value() * 0.5); // default medium = 15
 
         assertEquals(expected, result.value());
     }
@@ -82,7 +81,7 @@ class ToDoFrequencyServiceTest {
         ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
 
         // then
-        int expected = (int) Math.round(BaseInterval.HIGH_PRIORITY_BASE_INTERVAL.getInterval().value() * 0.75);
+        int expected = (int) Math.round(new ToDoIntervalMinutes(10).value() * 0.75); // default high = 10
 
         assertEquals(expected, result.value());
     }
@@ -101,7 +100,7 @@ class ToDoFrequencyServiceTest {
         ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
 
         // then
-        ToDoIntervalMinutes expected = BaseInterval.HIGH_PRIORITY_BASE_INTERVAL.getInterval();
+        ToDoIntervalMinutes expected = new ToDoIntervalMinutes(10); // default high priority base interval
 
         assertEquals(expected.value(), result.value());
     }

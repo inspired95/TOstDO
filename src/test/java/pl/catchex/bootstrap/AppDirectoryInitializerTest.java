@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.*;
 class AppDirectoryInitializerTest {
 
     private FileSystemService fs;
-    private SampleTodoContentProvider sampleTodoContentProvider;
     private AppDirectoryInitializer initializer;
     private Path home;
     private Path appDir;
@@ -26,8 +26,7 @@ class AppDirectoryInitializerTest {
     @BeforeEach
     void setUp() {
         fs = mock(FileSystemService.class);
-        sampleTodoContentProvider = new SampleTodoContentProvider();
-        initializer = new AppDirectoryInitializer(fs, sampleTodoContentProvider);
+        initializer = new AppDirectoryInitializer(fs);
         // Use injected temporary directory as the 'home' to avoid touching real user.home
         home = tempDir;
         appDir = home.resolve(AppConstants.APP_DIR_NAME);
@@ -44,6 +43,9 @@ class AppDirectoryInitializerTest {
         when(fs.exists(todo)).thenReturn(false);
         when(fs.getResourceAsStream(AppConstants.RESOURCE_CONFIGURATION))
                 .thenReturn(new ByteArrayInputStream(("configuration:\n  todoFilePath: [path_to_todo.md_file]\n").getBytes(StandardCharsets.UTF_8)));
+        // provide todo resource stream so initializer can copy it
+        when(fs.getResourceAsStream(AppConstants.TODO_FILENAME))
+                .thenReturn(new ByteArrayInputStream(("# TOstDO\n\n- [ ] Przykładowe zadanie\n").getBytes(StandardCharsets.UTF_8)));
 
         initializer.perform();
 
@@ -55,10 +57,12 @@ class AppDirectoryInitializerTest {
         assertTrue(configContent.contains("todoFilePath"));
         assertTrue(configContent.contains(appDir.resolve(AppConstants.TODO_FILENAME).toString()));
 
-        ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(fs).writeString(eq(todo), contentCaptor.capture(), eq(StandardCharsets.UTF_8));
-        String content = contentCaptor.getValue();
-        assertTrue(content.contains("TOstDO"));
+        // capture and verify the copied todo resource
+        ArgumentCaptor<InputStream> inCaptor = ArgumentCaptor.forClass(InputStream.class);
+        verify(fs).copy(inCaptor.capture(), eq(todo));
+        InputStream capturedIn = inCaptor.getValue();
+        String copiedContent = new String(capturedIn.readAllBytes(), StandardCharsets.UTF_8);
+        assertTrue(copiedContent.contains("TOstDO"));
     }
 
     @Test
@@ -89,11 +93,15 @@ class AppDirectoryInitializerTest {
         when(fs.exists(todo)).thenReturn(false);
         when(fs.getResourceAsStream(AppConstants.RESOURCE_CONFIGURATION))
                 .thenReturn(null);
+        // simulate missing todo resource so initializer skips creating todo
+        when(fs.getResourceAsStream(AppConstants.TODO_FILENAME)).thenReturn(null);
 
         initializer.perform();
 
         verify(fs).createDirectories(appDir);
         verify(fs, never()).copy(any(), eq(config));
-        verify(fs).writeString(eq(todo), anyString(), eq(StandardCharsets.UTF_8));
+        // when todo resource is missing initializer should not write or copy the todo file
+        verify(fs, never()).writeString(eq(todo), anyString(), eq(StandardCharsets.UTF_8));
+        verify(fs, never()).copy(any(), eq(todo));
     }
 }

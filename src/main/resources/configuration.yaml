@@ -4,16 +4,25 @@
 configuration:
   todoFilePath: [path_to_todo.md_file]
   todoItem:
+    # Date format used for parsing and displaying dates
     dateFormat: dd/MM/yyyy
     priority:
+      # Priority levels and their corresponding symbols
       symbol:
         low: +
         medium: ++
         high: +++
   reminder:
+    # Factor to multiply the base reminder period for critical and urgent tasks
     periodFactor:
       critical: 0.25
       urgent: 0.5
+    # Period under which tasks  are considered critical or urgent  (in days)
     periodThreshold:
       critical: 1
       urgent: 3
+    # Base reminder interval in minutes for different priority levels
+    baseIntervalMinutes:
+      low: 20
+      medium: 15
+      high: 10

@@ -61,7 +61,7 @@ class AppDirectoryInitializerResourceMissingTest {
         DummyFS fs = new DummyFS(tempDir);
 
         // call initializer with our dummy fs (resource stream will be null)
-        new AppDirectoryInitializer(fs, new SampleTodoContentProvider()).perform();
+        new AppDirectoryInitializer(fs).perform();
 
         Path appDir = tempDir.resolve(AppConstants.APP_DIR_NAME);
         assertTrue(Files.exists(appDir), "app dir should still be created");
@@ -70,13 +70,6 @@ class AppDirectoryInitializerResourceMissingTest {
         assertFalse(Files.exists(config), "config.yaml should NOT be created when resource is missing");
 
         Path todo = appDir.resolve(AppConstants.TODO_FILENAME);
-        assertTrue(Files.exists(todo), "todo.md should still be created");
-
-        try {
-            String todoContents = Files.readString(todo);
-            assertTrue(todoContents.contains("TOstDO"));
-        } catch (IOException e) {
-            fail("Should be able to read created todo file");
-        }
+        assertFalse(Files.exists(todo), "todo.md should NOT be created when resource is missing");
     }
 }

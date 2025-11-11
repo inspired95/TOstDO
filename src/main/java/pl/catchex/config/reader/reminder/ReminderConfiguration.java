@@ -3,6 +3,7 @@ package pl.catchex.config.reader.reminder;
 public class ReminderConfiguration {
     private PeriodFactorConfiguration periodFactor;
     private PeriodThresholdConfiguration periodThreshold;
+    private BaseIntervalConfiguration baseIntervalMinutes;
 
     public ReminderConfiguration() {
         // public comment required by snakeyaml
@@ -23,4 +24,8 @@ public class ReminderConfiguration {
     public void setPeriodThreshold(PeriodThresholdConfiguration periodThreshold) {
         this.periodThreshold = periodThreshold;
     }
+
+    public BaseIntervalConfiguration getBaseIntervalMinutes() { return baseIntervalMinutes; }
+
+    public void setBaseIntervalMinutes(BaseIntervalConfiguration baseIntervalMinutes) { this.baseIntervalMinutes = baseIntervalMinutes; }
 }

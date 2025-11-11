@@ -1,7 +1,6 @@
 package pl.catchex.frequency;
 
 import pl.catchex.config.reader.reminder.ReminderConfiguration;
-import pl.catchex.model.BaseInterval;
 import pl.catchex.model.ToDoIntervalMinutes;
 import pl.catchex.model.ToDoItem;
 
@@ -19,6 +18,8 @@ public class ToDoFrequencyService {
     private final int periodCriticalThreshold;
     private final int periodUrgentThreshold;
 
+    private final ReminderConfiguration reminderConfig;
+
     /**
      * Create a ToDoFrequencyService using the provided clock and reminder configuration.
      *
@@ -27,6 +28,7 @@ public class ToDoFrequencyService {
      */
     public ToDoFrequencyService(Clock clock, ReminderConfiguration configuration){
         this.clock = clock;
+        this.reminderConfig = configuration;
         periodCriticalFactor = configuration.getPeriodFactor().getCritical();
         periodUrgentFactor = configuration.getPeriodFactor().getUrgent();
         periodCriticalThreshold = configuration.getPeriodThreshold().getCritical();
@@ -43,13 +45,13 @@ public class ToDoFrequencyService {
      * @return calculated ToDoIntervalMinutes representing minutes between reminders
      */
     public ToDoIntervalMinutes calculateToDoInterval(ToDoItem toDoItem){
-        BaseInterval baseInterval = ToDoPriorityToBaseIntervalConverter.convert(toDoItem.priority());
+        ToDoIntervalMinutes baseInterval = ToDoPriorityToBaseIntervalConverter.convert(toDoItem.priority(), reminderConfig);
         return expediteIfTimeLow(toDoItem, baseInterval);
     }
 
-    private ToDoIntervalMinutes expediteIfTimeLow(ToDoItem todo, BaseInterval baseInterval) {
+    private ToDoIntervalMinutes expediteIfTimeLow(ToDoItem todo, ToDoIntervalMinutes baseInterval) {
         if(todo.dueDate() == null){
-            return baseInterval.getInterval();
+            return baseInterval;
         }
         LocalDate today = LocalDate.now(clock);
 
@@ -61,11 +63,11 @@ public class ToDoFrequencyService {
         if(period.getDays() < periodUrgentThreshold){
             return expedite(baseInterval, periodUrgentFactor);
         }
-        return baseInterval.getInterval();
+        return baseInterval;
     }
 
-    private ToDoIntervalMinutes expedite(BaseInterval baseInterval, double factor){
-        int intervalMinutes = baseInterval.getInterval().value();
+    private ToDoIntervalMinutes expedite(ToDoIntervalMinutes baseInterval, double factor){
+        int intervalMinutes = baseInterval.value();
         int roundedInterval = round(intervalMinutes * factor);
         return new ToDoIntervalMinutes(roundedInterval);
     }

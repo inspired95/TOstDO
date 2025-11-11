@@ -8,7 +8,6 @@ import pl.catchex.bootstrap.ConfigCreator;
 import pl.catchex.bootstrap.DefaultConfigCreatorImpl;
 import pl.catchex.bootstrap.FileSystemService;
 import pl.catchex.bootstrap.RealFileSystemService;
-import pl.catchex.bootstrap.SampleTodoContentProvider;
 import pl.catchex.bootstrap.DefaultPathProvider;
 
 public class BootstrapModule extends AbstractModule {
@@ -39,6 +38,6 @@ public class BootstrapModule extends AbstractModule {
     @Provides
     @Singleton
     public AppDirectoryInitializer provideAppDirectoryInitializer(FileSystemService fs, ConfigCreator configCreator) {
-        return new AppDirectoryInitializer(fs, new SampleTodoContentProvider(), configCreator);
+        return new AppDirectoryInitializer(fs, configCreator);
     }
 }

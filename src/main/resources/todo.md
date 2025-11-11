@@ -1,0 +1,6 @@
+- [ ] Buy milk [+++]
+- [ ] Fix the world [++]
+- [ ] Learn to play the guitar [+]
+- [ ] Read a book 
+- [ ] Go for a walk [+++] [12/12/2099]
+- [ ] Write a blog post
