@@ -140,7 +140,7 @@ sequenceDiagram
 
   Run:
   ```bash
-  java -jar target/TOstDO-0.0.1-SNAPSHOT.jar
+  java -jar target/tostdo-0.0.1-SNAPSHOT.jar
   ```
 
 Note: On first run the application creates an application directory (for example `~/.TOstDO`), copies a default `config.yaml` (if present in resources), and creates a sample `todo.md` file.
