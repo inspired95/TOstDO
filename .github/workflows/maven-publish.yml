@@ -23,7 +23,7 @@ jobs:
           java-version: '21'
 
       - name: Build (package)
-        run: mvn -B -DskipTests=true package
+        run: mvn -B -DskipTests=true package shade:shade
 
       - name: Run tests
         run: mvn -B test
@@ -123,4 +123,16 @@ jobs:
           </settings>
           EOF
           fi
-          mvn -B deploy --settings $HOME/.m2/settings.xml
+          # Find shaded jar and deploy it explicitly to avoid uploading a non-runnable artifact
+          SHADDED=$(ls target/*-shaded.jar 2>/dev/null | head -n 1 || true)
+          if [ -z "${SHADDED}" ]; then
+            echo "ERROR: shaded jar not found, aborting deploy" >&2
+            exit 1
+          fi
+          echo "Deploying shaded artifact: ${SHADDED}"
+          mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
+            -Dfile="${SHADDED}" \
+            -DpomFile=pom.xml \
+            -DrepositoryId=internal.repo \
+            -Durl=https://maven.pkg.github.com/inspired95/tostdo \
+            --settings $HOME/.m2/settings.xml
