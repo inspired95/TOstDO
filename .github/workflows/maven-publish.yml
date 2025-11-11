@@ -1,50 +1,67 @@
-# This workflow will build a package using Maven and then publish it to GitHub packages
 name: Maven Package
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ '**' ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Ta permisja jest kluczowa dla GITHUB_TOKEN
-
+      packages: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21' # Ustawilem na 21, tak jak miales w 'with'
           distribution: 'temurin'
+          java-version: '17'
 
-      - name: Create settings.xml
+      - name: Build (package)
+        run: mvn -B -DskipTests=true package
+
+      - name: Run tests
+        run: mvn -B test
+
+      - name: Deploy artifacts
+        if: github.ref == 'refs/heads/main'
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"
-                        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
-                        xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0
-                                            https://maven.apache.org/xsd/settings-1.0.0.xsd\">
+          set -euo pipefail
+          mkdir -p $HOME/.m2
+          # Prefer explicit MAVEN_USERNAME/MAVEN_PASSWORD if provided
+          if [ -n "${MAVEN_USERNAME:-}" ]; then
+            cat > $HOME/.m2/settings.xml <<EOF
+          <settings>
             <servers>
               <server>
-                <!-- To ID musi być takie samo jak <id> w pom.xml i server-id w setup-java -->
+                <id>internal.repo</id>
+                <username>\${env.MAVEN_USERNAME}</username>
+                <password>\${env.MAVEN_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+          else
+            cat > $HOME/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
                 <id>internal.repo</id>
                 <username>\${env.GITHUB_ACTOR}</username>
                 <password>\${env.GITHUB_TOKEN}</password>
               </server>
             </servers>
-          </settings>" > $GITHUB_WORKSPACE/settings.xml
-
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
-
-      - name: Publish to GitHub Packages Apache Maven
-        # Używamy pliku settings.xml, który stworzyliśmy w poprzednim kroku
-        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-        env:
-          # Ten token jest automatycznie przekazywany do pliku settings.xml
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          </settings>
+          EOF
+          fi
+          mvn -B deploy --settings $HOME/.m2/settings.xml
