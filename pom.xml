@@ -21,9 +21,9 @@
     </distributionManagement>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <!-- Removed compiler source/target properties, as we will use <release> in the plugin configuration -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
     </properties>
 
     <build>
@@ -33,6 +33,19 @@
             </resource>
         </resources>
         <plugins>
+
+            <!-- Explicitly configure the maven-compiler-plugin to fix the "invalid target release" error. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <!-- Use a recent version that reliably supports Java 21 -->
+                <version>3.14.1</version>
+                <configuration>
+                    <!-- Using <release> is the recommended modern way (JDK 9+) to set the Java version -->
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+
             <!-- JaCoCo plugin: prepare agent before tests, and generate XML report at verify -->
             <plugin>
                 <groupId>org.jacoco</groupId>
