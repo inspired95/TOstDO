@@ -71,8 +71,8 @@ public class ToDoReminderService implements ToDoRepositoryListener {
 
         ScheduledFuture<?> scheduledFuture = executorService.scheduleAtFixedRate(
                 reminderTask,
-                intervalMinutes, // initial delay
-                intervalMinutes, // period
+                intervalMinutes,
+                intervalMinutes,
                 TimeUnit.MINUTES
         );
 
@@ -100,7 +100,6 @@ public class ToDoReminderService implements ToDoRepositoryListener {
         logger.info("Stopping ToDoReminderService...");
         executorService.shutdown();
         try {
-            // Wait for currently running tasks to finish
             if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
                 logger.warn("Executor service did not terminate cleanly, forcing shutdown...");
                 executorService.shutdownNow();
