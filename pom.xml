@@ -12,8 +12,12 @@
     <distributionManagement>
         <repository>
             <id>internal.repo</id>
-            <url>https://github.com/inspired95/TOstDO</url>
+            <url>https://maven.pkg.github.com/inspired95/TOstDO</url>
         </repository>
+        <snapshotRepository>
+            <id>internal.repo</id>
+            <url>https://maven.pkg.github.com/inspired95/TOstDO</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <properties>
