@@ -23,7 +23,7 @@ jobs:
           java-version: '21'
 
       - name: Build (package)
-        run: mvn -B -DskipTests=true package shade:shade
+        run: mvn -B -DskipTests=true clean package org.apache.maven.plugins:maven-shade-plugin:3.4.1:shade -DshadedArtifactAttached=true -DshadedClassifierName=shaded
 
       - name: Run tests
         run: mvn -B test
@@ -76,16 +76,84 @@ jobs:
           set -euo pipefail
           echo "Listing target content:"
           ls -la target || true
-          # Look for any shaded jar produced by maven-shade-plugin
-          SHADDED=$(ls target/*-shaded.jar 2>/dev/null || true)
-          if [ -z "${SHADDED}" ]; then
-            echo "ERROR: No shaded jar found in target/. Preventing deploy to avoid uploading a non-runnable artifact." >&2
+
+          FOUND=""
+
+          # 1) Direct shaded patterns
+          for pat in "target/*-shaded.jar" "target/*-jar-with-dependencies.jar" "target/*-all.jar"; do
+            for f in $pat; do
+              [ -f "$f" ] || continue
+              echo "Found candidate by pattern: $f"
+              FOUND="$f"
+              break 2
+            done
+          done
+
+          # 2) If shade replaced main jar, there will be original-<name>.jar and the real shaded jar will be the non-original one
+          if [ -z "${FOUND}" ]; then
+            for orig in target/original-*.jar; do
+              [ -f "$orig" ] || continue
+              echo "Detected original- jar: $orig"
+              base=$(basename "$orig")
+              # remove leading 'original-' to get main jar name
+              candidate="target/${base#original-}"
+              if [ -f "$candidate" ]; then
+                echo "Assuming replaced main jar is shaded: $candidate"
+                FOUND="$candidate"
+                break
+              fi
+            done
+          fi
+
+          # 3) Fallback: pick the largest jar in target (excluding sources/javadoc and original- files)
+          if [ -z "${FOUND}" ]; then
+            echo "No explicit shaded candidate found; selecting largest jar in target as fallback"
+            # find jar files excluding -sources.jar and -javadoc.jar
+            jars=$(ls -1S target/*.jar 2>/dev/null | grep -vE '(-sources|-javadoc)\.jar' || true)
+            for f in $jars; do
+              [ -f "$f" ] || continue
+              FOUND="$f"
+              break
+            done
+          fi
+
+          if [ -z "${FOUND}" ]; then
+            echo "ERROR: No runnable/shaded jar found in target/. Preventing deploy to avoid uploading a non-runnable artifact." >&2
             exit 1
           fi
-          echo "Found shaded artifact(s):"
-          ls -la target/*-shaded.jar
+
+          echo "Selected candidate for inspection: ${FOUND}"
+          ls -la "${FOUND}"
+
+          # Inspect manifest for Main-Class or file listing for SLF4J
+          hasMain=$(unzip -p "${FOUND}" META-INF/MANIFEST.MF 2>/dev/null || true)
+          if echo "$hasMain" | grep -qi "Main-Class:"; then
+            echo "Manifest contains Main-Class:" && echo "$hasMain" | sed -n '1,200p'
+            ok=1
+          else
+            # look for SLF4J class
+            if unzip -l "${FOUND}" 2>/dev/null | grep -q "org/slf4j/LoggerFactory.class"; then
+              echo "Artifact contains org/slf4j/LoggerFactory.class"
+              ok=1
+            else
+              ok=0
+            fi
+          fi
+
+          if [ "$ok" -ne 1 ]; then
+            echo "WARNING: Selected jar does not contain Main-Class nor SLF4J; it may be non-runnable. Candidate:" >&2
+            echo "  ${FOUND}" >&2
+            # But still allow deploy if user wants; currently we abort to be safe
+            echo "ERROR: Selected artifact does not look runnable. Aborting." >&2
+            exit 1
+          fi
+
           echo "Shaded artifact size and checksum:"
-          for f in target/*-shaded.jar; do sha256sum "$f" || true; ls -lh "$f" || true; done
+          sha256sum "${FOUND}" || true
+          ls -lh "${FOUND}" || true
+
+          # export for subsequent steps
+          echo "SHADDED=${FOUND}" >> $GITHUB_ENV
 
       - name: Deploy artifacts
         if: github.ref == 'refs/heads/main'
@@ -123,16 +191,31 @@ jobs:
           </settings>
           EOF
           fi
-          # Find shaded jar and deploy it explicitly to avoid uploading a non-runnable artifact
-          SHADDED=$(ls target/*-shaded.jar 2>/dev/null | head -n 1 || true)
-          if [ -z "${SHADDED}" ]; then
-            echo "ERROR: shaded jar not found, aborting deploy" >&2
+          # Use artifact selected in verification step (SHADDED exported to GITHUB_ENV)
+          echo "SHADDED (from verification step) = '${SHADDED:-}'"
+          if [ -z "${SHADDED:-}" ]; then
+            echo "ERROR: SHADDED variable not set. Did the verification step run and set SHADDED?" >&2
             exit 1
           fi
           echo "Deploying shaded artifact: ${SHADDED}"
-          mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
-            -Dfile="${SHADDED}" \
-            -DpomFile=pom.xml \
-            -DrepositoryId=internal.repo \
-            -Durl=https://maven.pkg.github.com/inspired95/tostdo \
-            --settings $HOME/.m2/settings.xml
+          # If the selected artifact filename indicates it's a shaded artifact (has '-shaded.jar'), publish with classifier
+          if echo "${SHADDED}" | grep -q "-shaded\.jar$"; then
+            echo "Deploying with classifier=shaded"
+            mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
+              -Dfile="${SHADDED}" \
+              -DpomFile=pom.xml \
+              -Dclassifier=shaded \
+              -Dpackaging=jar \
+              -DrepositoryId=internal.repo \
+              -Durl=https://maven.pkg.github.com/inspired95/tostdo \
+              --settings $HOME/.m2/settings.xml
+          else
+            echo "Deploying without classifier (main artifact replaced by shade)"
+            mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
+              -Dfile="${SHADDED}" \
+              -DpomFile=pom.xml \
+              -Dpackaging=jar \
+              -DrepositoryId=internal.repo \
+              -Durl=https://maven.pkg.github.com/inspired95/tostdo \
+              --settings $HOME/.m2/settings.xml
+          fi
