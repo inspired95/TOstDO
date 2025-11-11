@@ -2,220 +2,30 @@ name: Maven Package
 
 on:
   push:
-    branches: [ '**' ]
+    branches: ['**']
   pull_request:
-    branches: [ '**' ]
+    branches: ['**']
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build (package)
-        run: mvn -B -DskipTests=true clean package org.apache.maven.plugins:maven-shade-plugin:3.4.1:shade -DshadedArtifactAttached=true -DshadedClassifierName=shaded
+      - name: Build (create FAT/shaded jar)
+        run: mvn -B -DskipTests=true clean package
 
-      - name: Run tests
-        run: mvn -B test
-
-      - name: "Debug: show settings and coordinates"
-        if: github.ref == 'refs/heads/main'
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
+      - name: Show target contents
         run: |
-          set -euo pipefail
-          mkdir -p $HOME/.m2
-          if [ -n "${MAVEN_USERNAME:-}" ]; then
-            cat > $HOME/.m2/settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                <id>internal.repo</id>
-                <username>${MAVEN_USERNAME}</username>
-                <password>${MAVEN_PASSWORD}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-          else
-            cat > $HOME/.m2/settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                <id>internal.repo</id>
-                <username>${GITHUB_ACTOR}</username>
-                <password>${GITHUB_TOKEN}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-          fi
-          echo "--- settings.xml (password masked) ---"
-          sed -E 's#(<password>).*?(</password>)#\1****\2#g' $HOME/.m2/settings.xml | sed -n '1,200p'
-          echo "--- project coordinates ---"
-          mvn -q -DforceStdout help:evaluate -Dexpression=project.groupId || true
-          mvn -q -DforceStdout help:evaluate -Dexpression=project.artifactId || true
-          mvn -q -DforceStdout help:evaluate -Dexpression=project.version || true
-
-      - name: Verify shaded artifact exists
-        if: github.ref == 'refs/heads/main'
-        run: |
-          set -euo pipefail
-          echo "Listing target content:"
+          echo "Contents of target/ after package:"
           ls -la target || true
 
-          FOUND=""
-
-          # 1) Direct shaded patterns
-          for pat in "target/*-shaded.jar" "target/*-jar-with-dependencies.jar" "target/*-all.jar"; do
-            for f in $pat; do
-              [ -f "$f" ] || continue
-              echo "Found candidate by pattern: $f"
-              FOUND="$f"
-              break 2
-            done
-          done
-
-          # 2) If shade replaced main jar, there will be original-<name>.jar and the real shaded jar will be the non-original one
-          if [ -z "${FOUND}" ]; then
-            for orig in target/original-*.jar; do
-              [ -f "$orig" ] || continue
-              echo "Detected original- jar: $orig"
-              base=$(basename "$orig")
-              # remove leading 'original-' to get main jar name
-              candidate="target/${base#original-}"
-              if [ -f "$candidate" ]; then
-                echo "Assuming replaced main jar is shaded: $candidate"
-                FOUND="$candidate"
-                break
-              fi
-            done
-          fi
-
-          # 3) Fallback: pick the largest jar in target (excluding sources/javadoc and original- files)
-          if [ -z "${FOUND}" ]; then
-            echo "No explicit shaded candidate found; selecting largest jar in target as fallback"
-            # find jar files excluding -sources.jar and -javadoc.jar
-            jars=$(ls -1S target/*.jar 2>/dev/null | grep -vE '(-sources|-javadoc)\.jar' || true)
-            for f in $jars; do
-              [ -f "$f" ] || continue
-              FOUND="$f"
-              break
-            done
-          fi
-
-          if [ -z "${FOUND}" ]; then
-            echo "ERROR: No runnable/shaded jar found in target/. Preventing deploy to avoid uploading a non-runnable artifact." >&2
-            exit 1
-          fi
-
-          echo "Selected candidate for inspection: ${FOUND}"
-          ls -la "${FOUND}"
-
-          # Inspect manifest for Main-Class or file listing for SLF4J
-          hasMain=$(unzip -p "${FOUND}" META-INF/MANIFEST.MF 2>/dev/null || true)
-          if echo "$hasMain" | grep -qi "Main-Class:"; then
-            echo "Manifest contains Main-Class:" && echo "$hasMain" | sed -n '1,200p'
-            ok=1
-          else
-            # look for SLF4J class
-            if unzip -l "${FOUND}" 2>/dev/null | grep -q "org/slf4j/LoggerFactory.class"; then
-              echo "Artifact contains org/slf4j/LoggerFactory.class"
-              ok=1
-            else
-              ok=0
-            fi
-          fi
-
-          if [ "$ok" -ne 1 ]; then
-            echo "WARNING: Selected jar does not contain Main-Class nor SLF4J; it may be non-runnable. Candidate:" >&2
-            echo "  ${FOUND}" >&2
-            # But still allow deploy if user wants; currently we abort to be safe
-            echo "ERROR: Selected artifact does not look runnable. Aborting." >&2
-            exit 1
-          fi
-
-          echo "Shaded artifact size and checksum:"
-          sha256sum "${FOUND}" || true
-          ls -lh "${FOUND}" || true
-
-          # export for subsequent steps
-          echo "SHADDED=${FOUND}" >> $GITHUB_ENV
-
-      - name: Deploy artifacts
-        if: github.ref == 'refs/heads/main'
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
-        run: |
-          set -euo pipefail
-          mkdir -p $HOME/.m2
-          # Prefer explicit MAVEN_USERNAME/MAVEN_PASSWORD if provided
-          if [ -n "${MAVEN_USERNAME:-}" ]; then
-            cat > $HOME/.m2/settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                <id>internal.repo</id>
-                <username>${MAVEN_USERNAME}</username>
-                <password>${MAVEN_PASSWORD}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-          else
-            cat > $HOME/.m2/settings.xml <<EOF
-          <settings>
-            <servers>
-              <server>
-                <id>internal.repo</id>
-                <username>${GITHUB_ACTOR}</username>
-                <password>${GITHUB_TOKEN}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-          fi
-          # Use artifact selected in verification step (SHADDED exported to GITHUB_ENV)
-          echo "SHADDED (from verification step) = '${SHADDED:-}'"
-          if [ -z "${SHADDED:-}" ]; then
-            echo "ERROR: SHADDED variable not set. Did the verification step run and set SHADDED?" >&2
-            exit 1
-          fi
-          echo "Deploying shaded artifact: ${SHADDED}"
-          # If the selected artifact filename indicates it's a shaded artifact (has '-shaded.jar'), publish with classifier
-          if echo "${SHADDED}" | grep -q "-shaded\.jar$"; then
-            echo "Deploying with classifier=shaded"
-            mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
-              -Dfile="${SHADDED}" \
-              -DpomFile=pom.xml \
-              -Dclassifier=shaded \
-              -Dpackaging=jar \
-              -DrepositoryId=internal.repo \
-              -Durl=https://maven.pkg.github.com/inspired95/tostdo \
-              --settings $HOME/.m2/settings.xml
-          else
-            echo "Deploying without classifier (main artifact replaced by shade)"
-            mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.1.2:deploy-file \
-              -Dfile="${SHADDED}" \
-              -DpomFile=pom.xml \
-              -Dpackaging=jar \
-              -DrepositoryId=internal.repo \
-              -Durl=https://maven.pkg.github.com/inspired95/tostdo \
-              --settings $HOME/.m2/settings.xml
-          fi
+      - name: Test
+        run: mvn -B test
