@@ -28,7 +28,7 @@ jobs:
       - name: Run tests
         run: mvn -B test
 
-      - name: Debug: show settings and coordinates
+      - name: "Debug: show settings and coordinates"
         if: github.ref == 'refs/heads/main'
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
