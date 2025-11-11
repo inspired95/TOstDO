@@ -21,7 +21,6 @@
     </distributionManagement>
 
     <properties>
-        <!-- Removed compiler source/target properties, as we will use <release> in the plugin configuration -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
     </properties>
@@ -34,15 +33,16 @@
         </resources>
         <plugins>
 
-            <!-- Explicitly configure the maven-compiler-plugin to fix the "invalid target release" error. -->
+            <!-- Explicitly configure the maven-compiler-plugin. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <!-- Use a recent version that reliably supports Java 21 -->
-                <version>3.14.1</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <!-- Using <release> is the recommended modern way (JDK 9+) to set the Java version -->
-                    <release>${java.version}</release>
+                    <!-- Switching from <release> to <source> and <target> to fix
+                         the "release version 21 not supported" error in CI environments. -->
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
 
@@ -87,10 +87,11 @@
                 <version>3.9.1.2184</version>
             </plugin>
 
+            <!-- Surefire plugin updated to a more recent version (3.2.5) for JDK 21 compatibility. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
                 </configuration>
