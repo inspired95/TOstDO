@@ -1,5 +1,9 @@
 name: Maven Package
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: ['**']
@@ -34,6 +38,32 @@ jobs:
         run: |
           echo "Finding files under */target/"
           find . -type f -path "*/target/*" -print || true
+
+      - name: Configure Maven settings for GitHub Packages
+        env:
+          MAVEN_USERNAME: ${{ github.actor }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<MAVEN_SETTINGS
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>internal.repo</id>
+                <username>$MAVEN_USERNAME</username>
+                <password>$MAVEN_PASSWORD</password>
+              </server>
+            </servers>
+          </settings>
+          MAVEN_SETTINGS
+        shell: bash
+
+      - name: Deploy to GitHub Packages
+        env:
+          MAVEN_OPTS: "-Xmx512m"
+        run: mvn -B -DskipTests=true deploy
 
       - name: Upload build artifacts
         if: always()
