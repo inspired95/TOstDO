@@ -1,10 +1,10 @@
 package pl.catchex.model;
 
-public record ToDoIntervalMinutes(int value) {
+public record IntervalMinutes(int value) {
 
     @Override
     public String toString() {
-        return "ToDoIntervalMinutes{" +
+        return "IntervalMinutes{" +
                 "value=" + value +
                 '}';
     }

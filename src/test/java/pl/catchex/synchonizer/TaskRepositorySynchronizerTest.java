@@ -2,9 +2,9 @@ package pl.catchex.synchonizer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pl.catchex.model.ToDoItem;
-import pl.catchex.model.ToDoRepository;
-import pl.catchex.reader.ToDoReader;
+import pl.catchex.model.Task;
+import pl.catchex.model.TaskRepository;
+import pl.catchex.reader.TaskReader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,22 +14,22 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class ToDoRepositorySynchronizerTest {
-    private ToDoReader reader;
-    private ToDoRepository repository;
-    private ToDoRepositorySynchronizer synchronizer;
+class TaskRepositorySynchronizerTest {
+    private TaskReader reader;
+    private TaskRepository repository;
+    private TaskRepositorySynchronizer synchronizer;
 
     @BeforeEach
     void setUp() {
-        reader = mock(ToDoReader.class);
-        repository = new ToDoRepository();
-        synchronizer = new ToDoRepositorySynchronizer(reader, repository);
+        reader = mock(TaskReader.class);
+        repository = new TaskRepository();
+        synchronizer = new TaskRepositorySynchronizer(reader, repository);
     }
 
     @Test
     void noChanges_doesNotModifyRepository() throws IOException {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("task1").priority(ToDoItem.Priority.MEDIUM).dueDate(LocalDate.now()).build();
+        Task item = new Task.Builder().task("task1").priority(Task.Priority.MEDIUM).dueDate(LocalDate.now()).build();
         when(reader.read()).thenReturn(List.of(item));
         repository.add(item);
 
@@ -43,7 +43,7 @@ class ToDoRepositorySynchronizerTest {
     @Test
     void addOnly_addsItemToRepository() throws IOException {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("task2").priority(ToDoItem.Priority.HIGH).dueDate(null).build();
+        Task item = new Task.Builder().task("task2").priority(Task.Priority.HIGH).dueDate(null).build();
         when(reader.read()).thenReturn(List.of(item));
 
         // when
@@ -56,7 +56,7 @@ class ToDoRepositorySynchronizerTest {
     @Test
     void removeOnly_removesItemFromRepository() throws IOException {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("task3").priority(ToDoItem.Priority.LOW).dueDate(null).build();
+        Task item = new Task.Builder().task("task3").priority(Task.Priority.LOW).dueDate(null).build();
         when(reader.read()).thenReturn(List.of());
         repository.add(item);
 
@@ -70,8 +70,8 @@ class ToDoRepositorySynchronizerTest {
     @Test
     void addAndRemove_updatesRepositoryAccordingly() throws IOException {
         // given
-        ToDoItem existing = new ToDoItem.Builder().task("existing").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
-        ToDoItem newItem = new ToDoItem.Builder().task("new").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
+        Task existing = new Task.Builder().task("existing").priority(Task.Priority.MEDIUM).dueDate(null).build();
+        Task newItem = new Task.Builder().task("new").priority(Task.Priority.MEDIUM).dueDate(null).build();
         repository.add(existing);
         when(reader.read()).thenReturn(List.of(newItem));
 
@@ -86,7 +86,7 @@ class ToDoRepositorySynchronizerTest {
     @Test
     void readThrowsIOException_skipsSynchronization() throws IOException {
         // given
-        ToDoItem existing = new ToDoItem.Builder().task("existing-io").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
+        Task existing = new Task.Builder().task("existing-io").priority(Task.Priority.MEDIUM).dueDate(null).build();
         repository.add(existing);
         when(reader.read()).thenThrow(new IOException("read error"));
 

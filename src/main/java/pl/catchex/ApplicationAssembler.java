@@ -4,13 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.catchex.common.DateParser;
 import pl.catchex.config.AppConfiguration;
-import pl.catchex.frequency.ToDoFrequencyService;
-import pl.catchex.model.ToDoRepository;
+import pl.catchex.frequency.TaskFrequencyService;
+import pl.catchex.model.TaskRepository;
 import pl.catchex.reader.PriorityParser;
-import pl.catchex.reader.ToDoReader;
-import pl.catchex.reader.lineparser.ToDoLineParserDispatcher;
-import pl.catchex.reminder.ToDoReminderService;
-import pl.catchex.synchonizer.ToDoRepositorySynchronizer;
+import pl.catchex.reader.TaskReader;
+import pl.catchex.reader.lineparser.TaskLineParserDispatcher;
+import pl.catchex.reminder.TaskReminderService;
+import pl.catchex.synchonizer.TaskRepositorySynchronizer;
 import pl.catchex.filewatcher.FileWatcher;
 import pl.catchex.filewatcher.DebounceCondition;
 import pl.catchex.tray.NotificationSender;
@@ -40,12 +40,12 @@ public class ApplicationAssembler {
     private final AppConfiguration config;
     private final NotificationSender notificationSender;
 
-    private FileWatcher todoFileWatcher;
+    private FileWatcher tasksFileWatcher;
 
-    private ToDoRepository repository;
-    private ToDoRepositorySynchronizer synchronizer;
+    private TaskRepository repository;
+    private TaskRepositorySynchronizer synchronizer;
 
-    private ToDoReminderService reminderService;
+    private TaskReminderService reminderService;
     private ScheduledExecutorService reminderExecutor;
     private final TrayService createdTrayService;
     private final pl.catchex.lifecycle.ApplicationStopperFactory applicationStopperFactory;
@@ -83,19 +83,18 @@ public class ApplicationAssembler {
         registerShutdownHook();
 
         try {
-            ToDoLineParserDispatcher dispatcher = createDispatcher();
-            Path todoFile = Paths.get(config.getConfiguration().getToDoFilePath());
+            TaskLineParserDispatcher dispatcher = createDispatcher();
+            Path tasksFile = Paths.get(config.getConfiguration().getTasksFilePath());
 
-            ToDoReader todoReader = createToDoReader(dispatcher, todoFile);
-            synchronizer = createSynchronizer(todoReader);
+            TaskReader taskReader = createTaskReader(dispatcher, tasksFile);
+            synchronizer = createSynchronizer(taskReader);
 
             this.reminderExecutor = createReminderExecutor();
             this.reminderService = createReminderService(this.reminderExecutor, this.notificationSender);
             this.repository.addListener(this.reminderService);
-            logger.info("ToDoReminderService registered with repository.");
             synchronizer.synchronizeRepository();
 
-            startWatcher(todoFile, synchronizer);
+            startWatcher(tasksFile, synchronizer);
 
             awaitShutdown();
 
@@ -122,23 +121,23 @@ public class ApplicationAssembler {
         }
     }
 
-    private ToDoLineParserDispatcher createDispatcher() {
+    private TaskLineParserDispatcher createDispatcher() {
         PriorityParser priorityParser = new PriorityParser(
-                config.getConfiguration().getTodoItem().getPriority().getSymbol()
+                config.getConfiguration().getTaskConfiguration().getPriority().getSymbol()
         );
         DateParser dateParser = new DateParser(
-                config.getConfiguration().getTodoItem().getDateFormat()
+                config.getConfiguration().getTaskConfiguration().getDateFormat()
         );
-        return new ToDoLineParserDispatcher(priorityParser, dateParser);
+        return new TaskLineParserDispatcher(priorityParser, dateParser);
     }
 
-    private ToDoReader createToDoReader(ToDoLineParserDispatcher dispatcher, Path todoFile) {
-        return new ToDoReader(dispatcher, todoFile);
+    private TaskReader createTaskReader(TaskLineParserDispatcher dispatcher, Path tasksFile) {
+        return new TaskReader(dispatcher, tasksFile);
     }
 
-    private ToDoRepositorySynchronizer createSynchronizer(ToDoReader todoReader) {
-        this.repository = new ToDoRepository();
-        this.synchronizer = new ToDoRepositorySynchronizer(todoReader, this.repository);
+    private TaskRepositorySynchronizer createSynchronizer(TaskReader taskReader) {
+        this.repository = new TaskRepository();
+        this.synchronizer = new TaskRepositorySynchronizer(taskReader, this.repository);
         return this.synchronizer;
     }
 
@@ -152,18 +151,18 @@ public class ApplicationAssembler {
         return Executors.newSingleThreadScheduledExecutor(factory);
     }
 
-    private ToDoReminderService createReminderService(ScheduledExecutorService executor, NotificationSender notificationSender) {
-        ToDoFrequencyService frequencyService = new ToDoFrequencyService(
+    private TaskReminderService createReminderService(ScheduledExecutorService executor, NotificationSender notificationSender) {
+        TaskFrequencyService frequencyService = new TaskFrequencyService(
                 Clock.systemDefaultZone(),
                 config.getConfiguration().getReminderConfiguration()
         );
-        return new ToDoReminderService(frequencyService, executor, notificationSender);
+        return new TaskReminderService(frequencyService, executor, notificationSender);
     }
 
-    private void startWatcher(Path todoFile, ToDoRepositorySynchronizer synchronizer) throws IOException {
-        this.todoFileWatcher = new FileWatcher(todoFile, new DebounceCondition(250));
-        this.todoFileWatcher.addListener(synchronizer);
-        this.todoFileWatcher.start();
+    private void startWatcher(Path tasksFile, TaskRepositorySynchronizer synchronizer) throws IOException {
+        this.tasksFileWatcher = new FileWatcher(tasksFile, new DebounceCondition(250));
+        this.tasksFileWatcher.addListener(synchronizer);
+        this.tasksFileWatcher.start();
     }
 
     private void awaitShutdown() {
@@ -184,7 +183,7 @@ public class ApplicationAssembler {
     public void stop() throws IOException {
         // create an ApplicationStopper via the factory and stop components
         pl.catchex.lifecycle.ApplicationStopper stopper = this.applicationStopperFactory.create(
-                this.todoFileWatcher,
+                this.tasksFileWatcher,
                 this.synchronizer,
                 this.reminderService,
                 this.reminderExecutor,

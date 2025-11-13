@@ -7,49 +7,49 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ToDoRepository {
-    private static final Logger logger = LoggerFactory.getLogger(ToDoRepository.class);
+public class TaskRepository {
+    private static final Logger logger = LoggerFactory.getLogger(TaskRepository.class);
 
-    private final Set<ToDoItem> concurrentSet = ConcurrentHashMap.newKeySet();
+    private final Set<Task> concurrentSet = ConcurrentHashMap.newKeySet();
 
-    private final CopyOnWriteArraySet<ToDoRepositoryListener> listeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<TaskRepositoryListener> listeners = new CopyOnWriteArraySet<>();
 
     /**
-     * Return a snapshot of all {@link ToDoItem} instances currently stored in the repository.
+     * Return a snapshot of all {@link Task} instances currently stored in the repository.
      *
-     * @return a new Set containing all stored ToDoItem instances
+     * @return a new Set containing all stored Task instances
      */
-    public Set<ToDoItem> getAll() {
+    public Set<Task> getAll() {
         return new HashSet<>(concurrentSet);
     }
 
     /**
-     * Check whether the repository contains a given {@link ToDoItem}.
+     * Check whether the repository contains a given {@link Task}.
      *
-     * @param item {@link ToDoItem} to check
+     * @param item {@link Task} to check
      * @return true if the item is present, false otherwise
      */
-    public boolean contains(ToDoItem item){
+    public boolean contains(Task item){
         return concurrentSet.contains(item);
     }
 
     /**
-     * Add a {@link ToDoItem} to the repository. If the item was added successfully
+     * Add a {@link Task} to the repository. If the item was added successfully
      * registered listeners will be notified.
      *
-     * @param item {@link ToDoItem} to add
+     * @param item {@link Task} to add
      * @return true if the item was added (it was not present previously)
      */
-    public boolean add(ToDoItem item){
+    public boolean add(Task item){
         boolean added = concurrentSet.add(item);
         if (added) {
             // notify listeners only when the item was actually added
-            for (ToDoRepositoryListener l : listeners) {
+            for (TaskRepositoryListener l : listeners) {
                 try {
-                    l.onToDoAdded(item);
+                    l.onTaskAdded(item);
                 } catch (Exception ex) {
                     // protect repository from listener exception - log it
-                    logger.warn("Listener threw exception during onToDoAdded for item {}: {}", item, ex.getMessage(), ex);
+                    logger.warn("Listener threw exception for item {}: {}", item, ex.getMessage(), ex);
                 }
             }
         }
@@ -57,21 +57,21 @@ public class ToDoRepository {
     }
 
     /**
-     * Remove a {@link ToDoItem} from the repository. If the item was removed
+     * Remove a {@link Task} from the repository. If the item was removed
      * registered listeners will be notified.
      *
-     * @param item {@link ToDoItem} to remove
+     * @param item {@link Task} to remove
      * @return true if the item was removed (it was present before)
      */
-    public boolean remove(ToDoItem item){
+    public boolean remove(Task item){
         boolean removed = concurrentSet.remove(item);
         if (removed) {
-            for (ToDoRepositoryListener l : listeners) {
+            for (TaskRepositoryListener l : listeners) {
                 try {
-                    l.onToDoRemoved(item);
+                    l.onTaskRemoved(item);
                 } catch (Exception ex) {
                     // protect repository from listener exception - log it
-                    logger.warn("Listener threw exception during onToDoRemoved for item {}: {}", item, ex.getMessage(), ex);
+                    logger.warn("Listener threw exception for item {}: {}", item, ex.getMessage(), ex);
                 }
             }
         }
@@ -83,10 +83,10 @@ public class ToDoRepository {
      *
      * @param listener listener to register (ignored if null)
      */
-    public void addListener(ToDoRepositoryListener listener) {
+    public void addListener(TaskRepositoryListener listener) {
         if (listener != null) {
             listeners.add(listener);
-            logger.debug("ToDoRepository listener added: {}", listener);
+            logger.debug("Listener added: {}", listener);
         }
     }
 
@@ -95,10 +95,10 @@ public class ToDoRepository {
      *
      * @param listener listener to remove (ignored if null)
      */
-    public void removeListener(ToDoRepositoryListener listener) {
+    public void removeListener(TaskRepositoryListener listener) {
         if (listener != null) {
             listeners.remove(listener);
-            logger.debug("ToDoRepository listener removed: {}", listener);
+            logger.debug("Listener removed: {}", listener);
         }
     }
 }

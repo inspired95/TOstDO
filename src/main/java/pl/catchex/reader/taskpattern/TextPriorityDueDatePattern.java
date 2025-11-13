@@ -1,10 +1,10 @@
-package pl.catchex.reader.todopattern;
+package pl.catchex.reader.taskpattern;
 
 import java.util.regex.Pattern;
 
 public class TextPriorityDueDatePattern {
     @SuppressWarnings("java:S5852") // Known false positive – controlled input, no chance for ReDoS
-    public static final Pattern TODO_PATTERN_PRIORITY_DUE_DATE = Pattern.compile(
+    public static final Pattern TASK_PATTERN_PRIORITY_DUE_DATE = Pattern.compile(
             "- \\[ ] (.*?) \\[(.*?)] \\[(.*?)]"
     );
 

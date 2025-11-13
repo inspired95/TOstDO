@@ -2,12 +2,12 @@ package pl.catchex.model;
 
 import java.time.LocalDate;
 
-public record ToDoItem(String task, Priority priority, LocalDate dueDate) {
+public record Task(String task, Priority priority, LocalDate dueDate) {
     public enum Priority {
         LOW, MEDIUM, HIGH
     }
 
-    public ToDoItem {
+    public Task {
         if (task == null || task.isBlank()) {
             throw new IllegalArgumentException("Task description cannot be empty");
         }
@@ -36,8 +36,8 @@ public record ToDoItem(String task, Priority priority, LocalDate dueDate) {
             return this;
         }
 
-        public ToDoItem build() {
-            return new ToDoItem(task, priority, dueDate);
+        public Task build() {
+            return new Task(task, priority, dueDate);
         }
     }
 

@@ -9,7 +9,6 @@ import java.nio.file.Path;
 
 /**
  * Ensures application directory and default files exist in user's home.
- * Now instance-based to allow DI of FileSystemService and easier testing.
  */
 public class AppDirectoryInitializer {
 
@@ -36,7 +35,7 @@ public class AppDirectoryInitializer {
 
         ensureAppDir(appDir);
         ensureConfig(appDir);
-        ensureTodo(appDir);
+        ensureTasks(appDir);
         ensureReadmes(appDir);
     }
 
@@ -53,23 +52,23 @@ public class AppDirectoryInitializer {
         this.configCreator.createDefaultConfig(appDir);
     }
 
-    private void ensureTodo(Path appDir) throws IOException {
-        Path todoFile = appDir.resolve(AppConstants.TODO_FILENAME);
-        if (!fs.exists(todoFile)) {
-            writeSampleTodo(todoFile);
-            logger.info("Sample todo file created at {}", todoFile);
+    private void ensureTasks(Path appDir) throws IOException {
+        Path tasksFile = appDir.resolve(AppConstants.TASKS_FILENAME);
+        if (!fs.exists(tasksFile)) {
+            writeSampleTasks(tasksFile);
+            logger.info("Sample file with tasks created at {}", tasksFile);
         } else {
-            logger.debug("Todo file already exists: {}", todoFile);
+            logger.debug("File with tasks already exists: {}", tasksFile);
         }
     }
 
-    private void writeSampleTodo(Path todoFile) throws IOException {
-        try (InputStream in = fs.getResourceAsStream(AppConstants.TODO_FILENAME)) {
+    private void writeSampleTasks(Path tasksFile) throws IOException {
+        try (InputStream in = fs.getResourceAsStream(AppConstants.TASKS_FILENAME)) {
             if (in == null) {
-                logger.warn("Sample todo resource '{}' not found on classpath, skipping creating {}", AppConstants.TODO_FILENAME, todoFile);
+                logger.warn("Sample tasks resource '{}' not found on classpath, skipping creating {}", AppConstants.TASKS_FILENAME, tasksFile);
             } else {
-                fs.copy(in, todoFile);
-                logger.info("Copied resource '{}' to {}", AppConstants.TODO_FILENAME, todoFile);
+                fs.copy(in, tasksFile);
+                logger.info("Copied resource '{}' to {}", AppConstants.TASKS_FILENAME, tasksFile);
             }
         }
     }

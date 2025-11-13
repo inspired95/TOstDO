@@ -1,10 +1,10 @@
-package pl.catchex.config.reader.todoitem;
+package pl.catchex.config.reader.taskConfiguration;
 
-public class TodoItemConfiguration {
+public class TaskConfiguration {
     private String dateFormat;
     private PriorityConfiguration priorityConfiguration;
 
-    public TodoItemConfiguration() {
+    public TaskConfiguration() {
         // public comment required by snakeyaml
     }
 

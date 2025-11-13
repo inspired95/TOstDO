@@ -8,18 +8,18 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class ToDoRepositoryTest {
-    private ToDoRepository repository;
+class TaskRepositoryTest {
+    private TaskRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new ToDoRepository();
+        repository = new TaskRepository();
     }
 
     @Test
     void addAndContainsAndRemove() {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("t1").priority(ToDoItem.Priority.MEDIUM).dueDate(LocalDate.now()).build();
+        Task item = new Task.Builder().task("t1").priority(Task.Priority.MEDIUM).dueDate(LocalDate.now()).build();
 
         // when / then
         assertFalse(repository.contains(item));
@@ -40,29 +40,29 @@ class ToDoRepositoryTest {
     @Test
     void listenersAreNotifiedOnAddAndRemove() {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("t2").priority(ToDoItem.Priority.HIGH).dueDate(null).build();
-        ToDoRepositoryListener listener = mock(ToDoRepositoryListener.class);
+        Task item = new Task.Builder().task("t2").priority(Task.Priority.HIGH).dueDate(null).build();
+        TaskRepositoryListener listener = mock(TaskRepositoryListener.class);
         repository.addListener(listener);
 
         // when
         assertTrue(repository.add(item));
 
         // then
-        verify(listener, times(1)).onToDoAdded(item);
+        verify(listener, times(1)).onTaskAdded(item);
 
         // when
         assertTrue(repository.remove(item));
 
         // then
-        verify(listener, times(1)).onToDoRemoved(item);
+        verify(listener, times(1)).onTaskRemoved(item);
     }
 
     @Test
     void exceptionInListenerDoesNotBreakRepository() {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("t3").priority(ToDoItem.Priority.LOW).dueDate(null).build();
-        ToDoRepositoryListener badListener = mock(ToDoRepositoryListener.class);
-        doThrow(new RuntimeException("boom")).when(badListener).onToDoAdded(item);
+        Task item = new Task.Builder().task("t3").priority(Task.Priority.LOW).dueDate(null).build();
+        TaskRepositoryListener badListener = mock(TaskRepositoryListener.class);
+        doThrow(new RuntimeException("boom")).when(badListener).onTaskAdded(item);
         repository.addListener(badListener);
 
         // when
@@ -76,9 +76,9 @@ class ToDoRepositoryTest {
     @Test
     void multipleListenersReceiveNotifications() {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("t4").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
-        ToDoRepositoryListener l1 = mock(ToDoRepositoryListener.class);
-        ToDoRepositoryListener l2 = mock(ToDoRepositoryListener.class);
+        Task item = new Task.Builder().task("t4").priority(Task.Priority.MEDIUM).dueDate(null).build();
+        TaskRepositoryListener l1 = mock(TaskRepositoryListener.class);
+        TaskRepositoryListener l2 = mock(TaskRepositoryListener.class);
         repository.addListener(l1);
         repository.addListener(l2);
 
@@ -86,22 +86,22 @@ class ToDoRepositoryTest {
         repository.add(item);
 
         // then
-        verify(l1, times(1)).onToDoAdded(item);
-        verify(l2, times(1)).onToDoAdded(item);
+        verify(l1, times(1)).onTaskAdded(item);
+        verify(l2, times(1)).onTaskAdded(item);
 
         // when
         repository.remove(item);
 
         // then
-        verify(l1, times(1)).onToDoRemoved(item);
-        verify(l2, times(1)).onToDoRemoved(item);
+        verify(l1, times(1)).onTaskRemoved(item);
+        verify(l2, times(1)).onTaskRemoved(item);
     }
 
     @Test
     void removeListenerStopsNotifications() {
         // given
-        ToDoItem item = new ToDoItem.Builder().task("t5").priority(ToDoItem.Priority.MEDIUM).dueDate(null).build();
-        ToDoRepositoryListener listener = mock(ToDoRepositoryListener.class);
+        Task item = new Task.Builder().task("t5").priority(Task.Priority.MEDIUM).dueDate(null).build();
+        TaskRepositoryListener listener = mock(TaskRepositoryListener.class);
         repository.addListener(listener);
 
         // when
@@ -111,12 +111,12 @@ class ToDoRepositoryTest {
         repository.add(item);
 
         // then
-        verify(listener, times(0)).onToDoAdded(item);
+        verify(listener, times(0)).onTaskAdded(item);
 
         // when
         repository.remove(item);
 
         // then
-        verify(listener, times(0)).onToDoRemoved(item);
+        verify(listener, times(0)).onTaskRemoved(item);
     }
 }

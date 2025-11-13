@@ -3,18 +3,18 @@ package pl.catchex.frequency;
 import org.junit.jupiter.api.Test;
 import pl.catchex.config.reader.reminder.BaseIntervalConfiguration;
 import pl.catchex.config.reader.reminder.ReminderConfiguration;
-import pl.catchex.model.ToDoIntervalMinutes;
-import pl.catchex.model.ToDoItem;
+import pl.catchex.model.IntervalMinutes;
+import pl.catchex.model.Task;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ToDoPriorityToBaseIntervalConverterTest {
+class TaskPriorityToBaseIntervalConverterTest {
 
     @Test
     void returnsDefaultValuesWhenConfigurationIsNull() {
-        ToDoIntervalMinutes low = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.LOW, null);
-        ToDoIntervalMinutes med = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.MEDIUM, null);
-        ToDoIntervalMinutes high = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.HIGH, null);
+        IntervalMinutes low = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.LOW, null);
+        IntervalMinutes med = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.MEDIUM, null);
+        IntervalMinutes high = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.HIGH, null);
 
         assertEquals(20, low.value());
         assertEquals(15, med.value());
@@ -31,9 +31,9 @@ class ToDoPriorityToBaseIntervalConverterTest {
         ReminderConfiguration rc = new ReminderConfiguration();
         rc.setBaseIntervalMinutes(cfg);
 
-        ToDoIntervalMinutes low = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.LOW, rc);
-        ToDoIntervalMinutes med = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.MEDIUM, rc);
-        ToDoIntervalMinutes high = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.HIGH, rc);
+        IntervalMinutes low = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.LOW, rc);
+        IntervalMinutes med = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.MEDIUM, rc);
+        IntervalMinutes high = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.HIGH, rc);
 
         assertEquals(30, low.value());
         assertEquals(25, med.value());
@@ -50,9 +50,9 @@ class ToDoPriorityToBaseIntervalConverterTest {
         ReminderConfiguration rc = new ReminderConfiguration();
         rc.setBaseIntervalMinutes(cfg);
 
-        ToDoIntervalMinutes low = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.LOW, rc);
-        ToDoIntervalMinutes med = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.MEDIUM, rc);
-        ToDoIntervalMinutes high = ToDoPriorityToBaseIntervalConverter.convert(ToDoItem.Priority.HIGH, rc);
+        IntervalMinutes low = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.LOW, rc);
+        IntervalMinutes med = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.MEDIUM, rc);
+        IntervalMinutes high = TaskPriorityToBaseIntervalConverter.convert(Task.Priority.HIGH, rc);
 
         assertEquals(20, low.value());
         assertEquals(18, med.value());

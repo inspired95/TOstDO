@@ -6,6 +6,6 @@ public interface PathProvider {
     Path getUserHome();
     Path getAppDir();
     Path getConfigPath();
-    Path getTodoPath();
+    Path getTasksPath();
 }
 

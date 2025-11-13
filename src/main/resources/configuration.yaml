@@ -1,9 +1,9 @@
 # Default configuration resource.
-# IMPORTANT: keep the placeholder [path_to_todo.md_file] exactly as shown — DefaultConfigCreator
-# will replace it with the real path when initializing the application directory.
+# IMPORTANT: keep the placeholder [path_to_tasks.md_file] exactly as shown
+# DefaultConfigCreator will replace it with the real path when initializing the application directory.
 configuration:
-  todoFilePath: [path_to_todo.md_file]
-  todoItem:
+  tasksFilePath: [path_to_tasks.md_file]
+  taskConfiguration:
     # Date format used for parsing and displaying dates
     dateFormat: dd/MM/yyyy
     priority:

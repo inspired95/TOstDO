@@ -16,7 +16,7 @@ import java.util.Objects;
 public class DefaultConfigCreatorImpl implements ConfigCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigCreatorImpl.class);
-    private static final String PLACEHOLDER = "[path_to_todo.md_file]";
+    private static final String PLACEHOLDER = "[path_to_tasks.md_file]";
 
     private final FileSystemService fs;
 
@@ -40,17 +40,17 @@ public class DefaultConfigCreatorImpl implements ConfigCreator {
 
             String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 
-            String newTodoPath = appDir.resolve(AppConstants.TODO_FILENAME).toString();
-            String modified = applyTodoPathReplacement(content, newTodoPath);
+            String newTasksPath = appDir.resolve(AppConstants.TASKS_FILENAME).toString();
+            String modified = applyTasksPathReplacement(content, newTasksPath);
 
             logger.debug("DefaultConfigCreator: modified config content:\n{}", modified);
 
             fs.writeString(targetConfig, modified, StandardCharsets.UTF_8);
-            logger.info("Default configuration copied to {} (with updated todoFilePath)", targetConfig);
+            logger.info("Default configuration copied to {} (with updated tasksFilePath)", targetConfig);
         }
     }
 
-    private static String applyTodoPathReplacement(String content, String newTodoPath) {
+    private static String applyTasksPathReplacement(String content, String newTasksPath) {
         if (content == null) {
             throw new IllegalStateException("Default configuration content is null");
         }
@@ -59,7 +59,7 @@ public class DefaultConfigCreatorImpl implements ConfigCreator {
         }
 
         // Replace all occurrences of the placeholder with a single-quoted, escaped path
-        String replacement = "'" + escapeSingleQuotes(newTodoPath) + "'";
+        String replacement = "'" + escapeSingleQuotes(newTasksPath) + "'";
         return content.replace(PLACEHOLDER, replacement);
     }
 

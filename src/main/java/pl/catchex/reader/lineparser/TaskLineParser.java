@@ -1,26 +1,26 @@
 package pl.catchex.reader.lineparser;
 
-import pl.catchex.model.ToDoItem;
+import pl.catchex.model.Task;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract class ToDoLineParser {
-    boolean isToDoTextValid(String text){
+abstract class TaskLineParser {
+    boolean isTaskTextValid(String text){
         return Objects.nonNull(text) && !text.isBlank();
     }
 
-    Optional<ToDoItem> parse(String line){
+    Optional<Task> parse(String line){
         Matcher matcher = pattern().matcher(line);
-        if (matcher.matches() && isToDoTextValid(matcher.group(1))) {
-            return toDoItem(matcher);
+        if (matcher.matches() && isTaskTextValid(matcher.group(1))) {
+            return toTask(matcher);
         }
         return Optional.empty();
     }
 
-    abstract Optional<ToDoItem> toDoItem(Matcher matcher);
+    abstract Optional<Task> toTask(Matcher matcher);
 
     abstract Pattern pattern();
 }

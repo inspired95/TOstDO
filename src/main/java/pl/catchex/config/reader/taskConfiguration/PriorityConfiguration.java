@@ -1,4 +1,4 @@
-package pl.catchex.config.reader.todoitem;
+package pl.catchex.config.reader.taskConfiguration;
 
 public class PriorityConfiguration {
     private SymbolConfiguration symbolConfiguration;

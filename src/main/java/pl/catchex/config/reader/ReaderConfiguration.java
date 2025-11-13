@@ -1,35 +1,35 @@
 package pl.catchex.config.reader;
 
 import pl.catchex.config.reader.reminder.ReminderConfiguration;
-import pl.catchex.config.reader.todoitem.TodoItemConfiguration;
+import pl.catchex.config.reader.taskConfiguration.TaskConfiguration;
 
 public class ReaderConfiguration {
-    private TodoItemConfiguration todoItemConfiguration;
+    private TaskConfiguration taskConfiguration;
     private ReminderConfiguration reminderConfiguration;
-    private String toDoFilePath;
+    private String tasksFilePath;
 
     public ReaderConfiguration() {
         // public comment required by snakeyaml
     }
 
-    public void setTodoItem(TodoItemConfiguration todoItemConfiguration) {
-        this.todoItemConfiguration = todoItemConfiguration;
+    public void setTaskConfiguration(TaskConfiguration taskConfiguration) {
+        this.taskConfiguration = taskConfiguration;
+    }
+
+    public TaskConfiguration getTaskConfiguration() {
+        return taskConfiguration;
     }
 
     public void setReminder(ReminderConfiguration reminderConfiguration){
         this.reminderConfiguration = reminderConfiguration;
     }
 
-    public TodoItemConfiguration getTodoItem(){
-        return todoItemConfiguration;
+    public void setTasksFilePath(String tasksFilePath){
+        this.tasksFilePath = tasksFilePath;
     }
 
-    public void setTodoFilePath(String toDoFilePath){
-        this.toDoFilePath = toDoFilePath;
-    }
-
-    public String getToDoFilePath(){
-        return toDoFilePath;
+    public String getTasksFilePath(){
+        return tasksFilePath;
     }
 
     public ReminderConfiguration getReminderConfiguration(){

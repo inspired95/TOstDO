@@ -2,9 +2,9 @@ package pl.catchex.lifecycle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.catchex.reminder.ToDoReminderService;
+import pl.catchex.reminder.TaskReminderService;
 import pl.catchex.filewatcher.FileWatcher;
-import pl.catchex.synchonizer.ToDoRepositorySynchronizer;
+import pl.catchex.synchonizer.TaskRepositorySynchronizer;
 import pl.catchex.tray.TrayService;
 
 import java.io.IOException;
@@ -17,18 +17,18 @@ import java.util.concurrent.TimeUnit;
 public class ApplicationStopper {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationStopper.class);
 
-    private final FileWatcher todoFileWatcher;
-    private final ToDoRepositorySynchronizer synchronizer;
-    private final ToDoReminderService reminderService;
+    private final FileWatcher tasksFileWatcher;
+    private final TaskRepositorySynchronizer synchronizer;
+    private final TaskReminderService reminderService;
     private final ScheduledExecutorService reminderExecutor;
     private final TrayService createdTrayService;
 
-    public ApplicationStopper(FileWatcher todoFileWatcher,
-                              ToDoRepositorySynchronizer synchronizer,
-                              ToDoReminderService reminderService,
+    public ApplicationStopper(FileWatcher tasksFileWatcher,
+                              TaskRepositorySynchronizer synchronizer,
+                              TaskReminderService reminderService,
                               ScheduledExecutorService reminderExecutor,
                               TrayService createdTrayService) {
-        this.todoFileWatcher = todoFileWatcher;
+        this.tasksFileWatcher = tasksFileWatcher;
         this.synchronizer = synchronizer;
         this.reminderService = reminderService;
         this.reminderExecutor = reminderExecutor;
@@ -49,9 +49,9 @@ public class ApplicationStopper {
     }
 
     private void removeSynchronizerListener() {
-        if (this.todoFileWatcher != null && this.synchronizer != null) {
+        if (this.tasksFileWatcher != null && this.synchronizer != null) {
             try {
-                this.todoFileWatcher.removeListener(this.synchronizer);
+                this.tasksFileWatcher.removeListener(this.synchronizer);
             } catch (Exception ex) {
                 logger.debug("Failed to remove watcher listener: {}", ex.getMessage());
             }
@@ -59,9 +59,9 @@ public class ApplicationStopper {
     }
 
     private void stopWatcher() throws IOException {
-        if (this.todoFileWatcher != null) {
+        if (this.tasksFileWatcher != null) {
             // FileWatcher.stop() may throw IOException which we propagate
-            this.todoFileWatcher.stop();
+            this.tasksFileWatcher.stop();
         }
     }
 

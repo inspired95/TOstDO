@@ -1,8 +1,8 @@
 package pl.catchex.reader;
 
 import org.junit.jupiter.api.Test;
-import pl.catchex.config.reader.todoitem.SymbolConfiguration;
-import pl.catchex.model.ToDoItem.Priority;
+import pl.catchex.config.reader.taskConfiguration.SymbolConfiguration;
+import pl.catchex.model.Task.Priority;
 
 import java.util.Optional;
 

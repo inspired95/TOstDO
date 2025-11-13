@@ -5,8 +5,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import pl.catchex.ApplicationAssembler;
 import pl.catchex.config.AppConfiguration;
-import pl.catchex.frequency.ToDoFrequencyService;
-import pl.catchex.reminder.ToDoReminderService;
+import pl.catchex.frequency.TaskFrequencyService;
+import pl.catchex.reminder.TaskReminderService;
 import pl.catchex.tray.NotificationSender;
 import pl.catchex.tray.NotificationSenderFactory;
 import pl.catchex.tray.TrayService;
@@ -72,14 +72,14 @@ public class AppModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ToDoReminderService provideToDoReminderService(ToDoFrequencyService frequencyService, ScheduledExecutorService executor, NotificationSender sender) {
-        return new ToDoReminderService(frequencyService, executor, sender);
+    public TaskReminderService provideTaskReminderService(TaskFrequencyService frequencyService, ScheduledExecutorService executor, NotificationSender sender) {
+        return new TaskReminderService(frequencyService, executor, sender);
     }
 
     @Provides
     @Singleton
-    public ToDoFrequencyService provideToDoFrequencyService() {
-        return new ToDoFrequencyService(Clock.systemDefaultZone(), config.getConfiguration().getReminderConfiguration());
+    public TaskFrequencyService provideTaskFrequencyService() {
+        return new TaskFrequencyService(Clock.systemDefaultZone(), config.getConfiguration().getReminderConfiguration());
     }
 
     @Provides

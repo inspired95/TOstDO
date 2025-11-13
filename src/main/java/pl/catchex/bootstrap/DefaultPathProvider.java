@@ -35,7 +35,7 @@ public class DefaultPathProvider implements PathProvider {
     }
 
     @Override
-    public Path getTodoPath() {
-        return getAppDir().resolve(AppConstants.TODO_FILENAME);
+    public Path getTasksPath() {
+        return getAppDir().resolve(AppConstants.TASKS_FILENAME);
     }
 }

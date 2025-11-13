@@ -2,10 +2,10 @@ package pl.catchex.reminder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.catchex.frequency.ToDoFrequencyService;
-import pl.catchex.model.ToDoIntervalMinutes;
-import pl.catchex.model.ToDoItem;
-import pl.catchex.model.ToDoRepositoryListener;
+import pl.catchex.frequency.TaskFrequencyService;
+import pl.catchex.model.IntervalMinutes;
+import pl.catchex.model.Task;
+import pl.catchex.model.TaskRepositoryListener;
 import pl.catchex.tray.NotificationSender;
 
 import java.util.Map;
@@ -15,16 +15,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Manages scheduling of reminders for ToDo items based on repository events. //NOSONAR
- * Implements ToDoRepositoryListener to react to changes.
+ * Manages scheduling of reminders for tasks based on repository events
  */
-public class ToDoReminderService implements ToDoRepositoryListener {
+public class TaskReminderService implements TaskRepositoryListener {
 
-    private final ToDoFrequencyService frequencyService;
+    private final TaskFrequencyService frequencyService;
     private final ScheduledExecutorService executorService;
     private final NotificationSender notificationSender; // may be null, then only logging is performed
-    private final Map<ToDoItem, ScheduledFuture<?>> activeReminders = new ConcurrentHashMap<>();
-    private static final Logger logger = LoggerFactory.getLogger(ToDoReminderService.class);
+    private final Map<Task, ScheduledFuture<?>> activeReminders = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(TaskReminderService.class);
 
     /**
      * Creates a new reminder service.
@@ -33,32 +32,32 @@ public class ToDoReminderService implements ToDoRepositoryListener {
      * @param executorService  executor to run scheduled tasks
      * @param notificationSender optional notification sender (may be null)
      */
-    public ToDoReminderService(ToDoFrequencyService frequencyService, ScheduledExecutorService executorService, NotificationSender notificationSender) {
+    public TaskReminderService(TaskFrequencyService frequencyService, ScheduledExecutorService executorService, NotificationSender notificationSender) {
         this.frequencyService = frequencyService;
         this.executorService = executorService;
         this.notificationSender = notificationSender;
     }
 
     @Override
-    public void onToDoAdded(ToDoItem item) {
-        // Prevent duplicate scheduling if the item is already being tracked
-        if (activeReminders.containsKey(item)) {
-            logger.warn("Attempted to add a reminder for an already tracked item: {}", item);
+    public void onTaskAdded(Task task) {
+        // Prevent duplicate scheduling if the task is already being tracked
+        if (activeReminders.containsKey(task)) {
+            logger.warn("Attempted to add a reminder for an already tracked task: {}", task);
             return;
         }
 
-        ToDoIntervalMinutes interval = frequencyService.calculateToDoInterval(item);
+        IntervalMinutes interval = frequencyService.calculateTaskInterval(task);
         long intervalMinutes = interval.value();
 
         Runnable reminderTask = () -> {
-            logger.info("--- TODO REMINDER (every {} min) ---", intervalMinutes);
-            logger.info("{}", item);
+            logger.info("--- TASK REMINDER (every {} min) ---", intervalMinutes);
+            logger.info("{}", task);
             logger.info("-------------------------------------------------");
             // Send a notification via NotificationSender if injected
             try {
                 if (notificationSender != null) {
                     String title = "TOstDO - reminder";
-                    String message = item.toString();
+                    String message = task.toString();
                     notificationSender.send(title, message, java.awt.TrayIcon.MessageType.INFO);
                 } else {
                     logger.debug("NotificationSender is not available - GUI notifications disabled");
@@ -76,20 +75,20 @@ public class ToDoReminderService implements ToDoRepositoryListener {
                 TimeUnit.MINUTES
         );
 
-        activeReminders.put(item, scheduledFuture);
-        logger.info("Started reminder for: {} (every {} min)", item, intervalMinutes);
+        activeReminders.put(task, scheduledFuture);
+        logger.info("Started reminder for: {} (every {} min)", task, intervalMinutes);
     }
 
     @Override
-    public void onToDoRemoved(ToDoItem item) {
-        ScheduledFuture<?> scheduledFuture = activeReminders.remove(item);
+    public void onTaskRemoved(Task task) {
+        ScheduledFuture<?> scheduledFuture = activeReminders.remove(task);
 
         if (scheduledFuture != null) {
             // false: do not interrupt if currently running, but prevent future executions
             scheduledFuture.cancel(false);
-            logger.info("Cancelled reminder for: {}", item);
+            logger.info("Cancelled reminder for: {}", task);
         } else {
-            logger.debug("Attempted to remove an untracked reminder: {}", item);
+            logger.debug("Attempted to remove an untracked reminder: {}", task);
         }
     }
 
@@ -97,7 +96,7 @@ public class ToDoReminderService implements ToDoRepositoryListener {
      * Shuts down the scheduled executor service used by this service.
      */
     public void stop() {
-        logger.info("Stopping ToDoReminderService...");
+        logger.info("Stopping...");
         executorService.shutdown();
         try {
             if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -110,6 +109,6 @@ public class ToDoReminderService implements ToDoRepositoryListener {
             Thread.currentThread().interrupt();
         }
         activeReminders.clear();
-        logger.info("ToDoReminderService stopped.");
+        logger.info("Stopped.");
     }
 }

@@ -69,7 +69,7 @@ class AppDirectoryInitializerResourceMissingTest {
         Path config = appDir.resolve(AppConstants.CONFIG_FILENAME);
         assertFalse(Files.exists(config), "config.yaml should NOT be created when resource is missing");
 
-        Path todo = appDir.resolve(AppConstants.TODO_FILENAME);
-        assertFalse(Files.exists(todo), "todo.md should NOT be created when resource is missing");
+        Path tasksFileName = appDir.resolve(AppConstants.TASKS_FILENAME);
+        assertFalse(Files.exists(tasksFileName), "tasks.md should NOT be created when resource is missing");
     }
 }

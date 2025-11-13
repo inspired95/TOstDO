@@ -2,8 +2,8 @@ package pl.catchex.lifecycle;
 
 import org.junit.jupiter.api.Test;
 import pl.catchex.filewatcher.FileWatcher;
-import pl.catchex.reminder.ToDoReminderService;
-import pl.catchex.synchonizer.ToDoRepositorySynchronizer;
+import pl.catchex.reminder.TaskReminderService;
+import pl.catchex.synchonizer.TaskRepositorySynchronizer;
 import pl.catchex.tray.TrayService;
 
 import java.io.IOException;
@@ -19,8 +19,8 @@ class ApplicationStopperTest {
     void stop_allComponentsStopped_noErrors() throws Exception {
         // given
         FileWatcher watcher = mock(FileWatcher.class);
-        ToDoRepositorySynchronizer sync = mock(ToDoRepositorySynchronizer.class);
-        ToDoReminderService reminder = mock(ToDoReminderService.class);
+        TaskRepositorySynchronizer sync = mock(TaskRepositorySynchronizer.class);
+        TaskReminderService reminder = mock(TaskReminderService.class);
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         TrayService tray = mock(TrayService.class);
 
@@ -43,8 +43,8 @@ class ApplicationStopperTest {
     void stop_watcherThrowsIOException_propagates() throws Exception {
         // given
         FileWatcher watcher = mock(FileWatcher.class);
-        ToDoRepositorySynchronizer sync = mock(ToDoRepositorySynchronizer.class);
-        ToDoReminderService reminder = mock(ToDoReminderService.class);
+        TaskRepositorySynchronizer sync = mock(TaskRepositorySynchronizer.class);
+        TaskReminderService reminder = mock(TaskReminderService.class);
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         TrayService tray = mock(TrayService.class);
 

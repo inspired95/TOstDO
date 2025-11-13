@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import pl.catchex.config.reader.reminder.PeriodFactorConfiguration;
 import pl.catchex.config.reader.reminder.PeriodThresholdConfiguration;
 import pl.catchex.config.reader.reminder.ReminderConfiguration;
-import pl.catchex.model.ToDoIntervalMinutes;
-import pl.catchex.model.ToDoItem;
+import pl.catchex.model.IntervalMinutes;
+import pl.catchex.model.Task;
 import pl.catchex.testutil.MutableClock;
 
 import java.time.Instant;
@@ -14,7 +14,7 @@ import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ToDoFrequencyServiceTest {
+class TaskFrequencyServiceTest {
 
     private ReminderConfiguration createConfig(double criticalFactor, double urgentFactor, int criticalThreshold, int urgentThreshold) {
         PeriodFactorConfiguration pf = new PeriodFactorConfiguration();
@@ -36,15 +36,15 @@ class ToDoFrequencyServiceTest {
         // given
         MutableClock clock = new MutableClock(Instant.parse("2025-11-02T00:00:00Z"), ZoneId.of("UTC"));
         ReminderConfiguration cfg = createConfig(0.5, 0.75, 1, 3);
-        ToDoFrequencyService svc = new ToDoFrequencyService(clock, cfg);
+        TaskFrequencyService svc = new TaskFrequencyService(clock, cfg);
 
-        ToDoItem item = new ToDoItem.Builder().task("task").priority(ToDoItem.Priority.LOW).dueDate(null).build();
+        Task item = new Task.Builder().task("task").priority(Task.Priority.LOW).dueDate(null).build();
 
         // when
-        ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
+        IntervalMinutes result = svc.calculateTaskInterval(item);
 
         // then
-        ToDoIntervalMinutes expected = new ToDoIntervalMinutes(20); // default low priority base interval
+        IntervalMinutes expected = new IntervalMinutes(20); // default low priority base interval
         assertEquals(expected.value(), result.value());
     }
 
@@ -53,16 +53,16 @@ class ToDoFrequencyServiceTest {
         // given
         MutableClock clock = new MutableClock(Instant.parse("2025-11-02T00:00:00Z"), ZoneId.of("UTC"));
         ReminderConfiguration cfg = createConfig(0.5, 0.8, 3, 7);
-        ToDoFrequencyService svc = new ToDoFrequencyService(clock, cfg);
+        TaskFrequencyService svc = new TaskFrequencyService(clock, cfg);
 
         LocalDate due = LocalDate.of(2025, 11, 4); // 2 days from base date -> < criticalThreshold(3)
-        ToDoItem item = new ToDoItem.Builder().task("t").priority(ToDoItem.Priority.MEDIUM).dueDate(due).build();
+        Task item = new Task.Builder().task("t").priority(Task.Priority.MEDIUM).dueDate(due).build();
 
         // when
-        ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
+        IntervalMinutes result = svc.calculateTaskInterval(item);
 
         // then
-        int expected = (int) Math.round(new ToDoIntervalMinutes(15).value() * 0.5); // default medium = 15
+        int expected = (int) Math.round(new IntervalMinutes(15).value() * 0.5); // default medium = 15
 
         assertEquals(expected, result.value());
     }
@@ -72,16 +72,16 @@ class ToDoFrequencyServiceTest {
         // given
         MutableClock clock = new MutableClock(Instant.parse("2025-11-02T00:00:00Z"), ZoneId.of("UTC"));
         ReminderConfiguration cfg = createConfig(0.4, 0.75, 1, 5);
-        ToDoFrequencyService svc = new ToDoFrequencyService(clock, cfg);
+        TaskFrequencyService svc = new TaskFrequencyService(clock, cfg);
 
         LocalDate due = LocalDate.of(2025, 11, 5); // 3 days from base date -> >=1 and <5 -> urgent
-        ToDoItem item = new ToDoItem.Builder().task("t").priority(ToDoItem.Priority.HIGH).dueDate(due).build();
+        Task item = new Task.Builder().task("t").priority(Task.Priority.HIGH).dueDate(due).build();
 
         // when
-        ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
+        IntervalMinutes result = svc.calculateTaskInterval(item);
 
         // then
-        int expected = (int) Math.round(new ToDoIntervalMinutes(10).value() * 0.75); // default high = 10
+        int expected = (int) Math.round(new IntervalMinutes(10).value() * 0.75); // default high = 10
 
         assertEquals(expected, result.value());
     }
@@ -91,16 +91,16 @@ class ToDoFrequencyServiceTest {
         // given
         MutableClock clock = new MutableClock(Instant.parse("2025-11-02T00:00:00Z"), ZoneId.of("UTC"));
         ReminderConfiguration cfg = createConfig(0.5, 0.8, 1, 5);
-        ToDoFrequencyService svc = new ToDoFrequencyService(clock, cfg);
+        TaskFrequencyService svc = new TaskFrequencyService(clock, cfg);
 
         LocalDate due = LocalDate.of(2026, 1, 15); // far future
-        ToDoItem item = new ToDoItem.Builder().task("t").priority(ToDoItem.Priority.HIGH).dueDate(due).build();
+        Task item = new Task.Builder().task("t").priority(Task.Priority.HIGH).dueDate(due).build();
 
         // when
-        ToDoIntervalMinutes result = svc.calculateToDoInterval(item);
+        IntervalMinutes result = svc.calculateTaskInterval(item);
 
         // then
-        ToDoIntervalMinutes expected = new ToDoIntervalMinutes(10); // default high priority base interval
+        IntervalMinutes expected = new IntervalMinutes(10); // default high priority base interval
 
         assertEquals(expected.value(), result.value());
     }

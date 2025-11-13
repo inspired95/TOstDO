@@ -1,8 +1,8 @@
 package pl.catchex.lifecycle;
 
 import pl.catchex.filewatcher.FileWatcher;
-import pl.catchex.reminder.ToDoReminderService;
-import pl.catchex.synchonizer.ToDoRepositorySynchronizer;
+import pl.catchex.reminder.TaskReminderService;
+import pl.catchex.synchonizer.TaskRepositorySynchronizer;
 import pl.catchex.tray.TrayService;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,9 +12,9 @@ import java.util.concurrent.ScheduledExecutorService;
  * to inject a mock factory or a custom implementation when needed.
  */
 public interface ApplicationStopperFactory {
-    ApplicationStopper create(FileWatcher todoFileWatcher,
-                               ToDoRepositorySynchronizer synchronizer,
-                               ToDoReminderService reminderService,
+    ApplicationStopper create(FileWatcher tasksFileWatcher,
+                               TaskRepositorySynchronizer synchronizer,
+                               TaskReminderService reminderService,
                                ScheduledExecutorService reminderExecutor,
                                TrayService createdTrayService);
 }
